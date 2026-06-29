@@ -4,16 +4,16 @@
   "description": "AI-powered document-to-quiz desktop workspace for practice, review, and study insights",
   "license": "MIT",
   "author": {
-    "name": "Freakz3z",
+    "name": "Freakz2z",
     "email": "3020517046@qq.com"
   },
-  "homepage": "https://github.com/Freakz3z/OpenStudy",
+  "homepage": "https://github.com/Freakz2z/OpenStudy",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Freakz3z/OpenStudy.git"
+    "url": "https://github.com/Freakz2z/OpenStudy.git"
   },
   "bugs": {
-    "url": "https://github.com/Freakz3z/OpenStudy/issues"
+    "url": "https://github.com/Freakz2z/OpenStudy/issues"
   },
   "main": "out/main/index.js",
   "type": "module",

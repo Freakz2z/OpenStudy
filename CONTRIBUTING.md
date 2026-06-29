@@ -6,7 +6,7 @@ This document keeps contribution expectations lightweight and practical so peopl
 
 ## Before You Start
 
-- Search existing [issues](https://github.com/Freakz3z/OpenStudy/issues) before opening a new one.
+- Search existing [issues](https://github.com/Freakz2z/OpenStudy/issues) before opening a new one.
 - For larger feature work, open an issue first so the direction can be aligned before implementation.
 - Keep pull requests focused. Small and reviewable changes are much easier to merge.
 
