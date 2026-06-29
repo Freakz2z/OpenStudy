@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), but stays lightweight for a fast-moving desktop project.
 
+## [0.1.1] - 2026-06-29
+
+### Fixed
+
+- Disabled `electron-builder` auto-publish during CI builds so release jobs can finish successfully before assets are uploaded by the dedicated GitHub Actions publish step
+- Kept installer artifact generation unchanged while preventing `GH_TOKEN`-related failures on Windows, Apple Silicon macOS, and Linux release builds
+
 ## [0.1.0] - 2026-06-29
 
 ### Added
