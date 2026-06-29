@@ -28,12 +28,12 @@ async function launchApp(): Promise<AppContext> {
   const app = await electron.launch({
     args: [
       join(ROOT, 'out/main/index.js'),
-      `--user-data-dir=${userDataDir}`,
       '--no-sandbox',
     ],
     env: {
       ...process.env,
       NODE_ENV: 'test',
+      OPENSTUDY_DATA_DIR: userDataDir,
       // 用一个不会真的被访问的 URL；主进程会拦截
       OPENSTUDY_MOCK_LLM: 'http://mock-llm.local/v1',
     },
@@ -168,10 +168,13 @@ test.describe('真实 Electron 集成测试', () => {
       const app2 = await electron.launch({
         args: [
           join(ROOT, 'out/main/index.js'),
-          `--user-data-dir=${ctx.userDataDir}`,
           '--no-sandbox',
         ],
-        env: { ...process.env, NODE_ENV: 'test' },
+        env: {
+          ...process.env,
+          NODE_ENV: 'test',
+          OPENSTUDY_DATA_DIR: ctx.userDataDir,
+        },
         timeout: 30000,
       });
       try {

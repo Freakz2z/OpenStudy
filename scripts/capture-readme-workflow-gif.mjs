@@ -132,8 +132,9 @@ const settings = {
   },
   shortcuts: {
     practiceSubmit: { key: 'Enter' },
-    practiceNext: { key: 'ArrowRight' },
+    practiceNext: { key: 'Enter' },
     practicePrev: { key: 'ArrowLeft' },
+    practiceRevealAnswer: { key: 'Space' },
     practiceOptionPrev: { key: 'ArrowUp' },
     practiceOptionNext: { key: 'ArrowDown' },
   },

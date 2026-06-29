@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   AlertCircle,
@@ -52,6 +52,13 @@ export default function Settings() {
   const [shortcuts, setShortcuts] = useState<ShortcutSettings>(DEFAULT_SHORTCUTS);
   const [savedShortcuts, setSavedShortcuts] = useState(false);
   const [recordingAction, setRecordingAction] = useState<ShortcutActionKey | null>(null);
+  const lastPersistedShortcuts = useRef(JSON.stringify(normalizeShortcutSettings(DEFAULT_SHORTCUTS)));
+  const persistedLlm = useRef<AppSettings['llm']>({
+    provider: defaultPreset.provider,
+    baseUrl: defaultPreset.baseUrl,
+    model: defaultPreset.model,
+    apiKey: '',
+  });
 
   useEffect(() => {
     let cancelled = false;
@@ -61,9 +68,12 @@ export default function Settings() {
         const nextSettings = settings as Partial<AppSettings>;
         if (cancelled) return;
         if (nextSettings.llm) {
+          persistedLlm.current = { ...persistedLlm.current, ...nextSettings.llm };
           setLlm((current) => ({ ...current, ...nextSettings.llm }));
         }
-        setShortcuts(normalizeShortcutSettings(nextSettings.shortcuts));
+        const normalizedShortcuts = normalizeShortcutSettings(nextSettings.shortcuts);
+        lastPersistedShortcuts.current = JSON.stringify(normalizedShortcuts);
+        setShortcuts(normalizedShortcuts);
       })
       .catch((e) => {
         if (!cancelled) setError((e as Error).message);
@@ -94,6 +104,11 @@ export default function Settings() {
           key: 'practicePrev',
           title: t('settings.shortcuts.actions.practicePrev.title'),
           description: t('settings.shortcuts.actions.practicePrev.description'),
+        },
+        {
+          key: 'practiceRevealAnswer',
+          title: t('settings.shortcuts.actions.practiceRevealAnswer.title'),
+          description: t('settings.shortcuts.actions.practiceRevealAnswer.description'),
         },
         {
           key: 'practiceOptionPrev',
@@ -132,6 +147,35 @@ export default function Settings() {
     return () => window.removeEventListener('keydown', onKeyDown, true);
   }, [recordingAction]);
 
+  useEffect(() => {
+    if (loadingModel) return;
+    const normalizedShortcuts = normalizeShortcutSettings(shortcuts);
+    const serialized = JSON.stringify(normalizedShortcuts);
+    if (serialized === lastPersistedShortcuts.current) return;
+
+    let cancelled = false;
+    setError(null);
+    setSavedShortcuts(false);
+    setSavingShortcuts(true);
+    void persistSettings({ shortcuts: normalizedShortcuts })
+      .then(() => {
+        if (cancelled) return;
+        lastPersistedShortcuts.current = serialized;
+        setSavedShortcuts(true);
+        window.setTimeout(() => setSavedShortcuts(false), 2000);
+      })
+      .catch((e) => {
+        if (!cancelled) setError((e as Error).message);
+      })
+      .finally(() => {
+        if (!cancelled) setSavingShortcuts(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loadingModel, shortcuts]);
+
   function setProvider(provider: LLMProviderType) {
     const nextPreset = LLM_PROVIDER_PRESETS[provider];
     setLlm((current) => ({
@@ -145,7 +189,7 @@ export default function Settings() {
 
   async function persistSettings(next: Partial<AppSettings>) {
     await window.api.updateSettings({
-      llm: next.llm ?? llm,
+      llm: next.llm ?? persistedLlm.current,
       shortcuts: normalizeShortcutSettings(next.shortcuts ?? shortcuts),
     });
     window.dispatchEvent(new CustomEvent('openstudy:settings-updated'));
@@ -156,26 +200,13 @@ export default function Settings() {
     setSavingModel(true);
     try {
       await persistSettings({ llm });
+      persistedLlm.current = { ...llm };
       setSaved(true);
       window.setTimeout(() => setSaved(false), 2000);
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setSavingModel(false);
-    }
-  }
-
-  async function onSaveShortcuts() {
-    setError(null);
-    setSavingShortcuts(true);
-    try {
-      await persistSettings({ shortcuts });
-      setSavedShortcuts(true);
-      window.setTimeout(() => setSavedShortcuts(false), 2000);
-    } catch (e) {
-      setError((e as Error).message);
-    } finally {
-      setSavingShortcuts(false);
     }
   }
 
@@ -302,18 +333,12 @@ export default function Settings() {
               >
                 {t('settings.shortcuts.reset')}
               </button>
-              <button
-                className="primary icon-only"
-                type="button"
-                onClick={onSaveShortcuts}
-                disabled={savingShortcuts || loadingModel}
-                aria-label={
-                  savingShortcuts ? t('common.saving') : t('settings.shortcuts.save')
-                }
-                title={savingShortcuts ? t('common.saving') : t('settings.shortcuts.save')}
-              >
-                {savingShortcuts ? <Loader2 size={16} className="spin" /> : <Check size={16} />}
-              </button>
+              {savingShortcuts && (
+                <span className="panel-status" role="status">
+                  <Loader2 size={14} className="spin" />
+                  {t('common.saving')}
+                </span>
+              )}
               {savedShortcuts && (
                 <span className="panel-status" role="status">
                   <Check size={14} />

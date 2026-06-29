@@ -60,10 +60,10 @@ Instead of treating a Markdown note set as a dead asset, OpenStudy turns it into
 ## Demo
 
 <p align="center">
-  <img src=".github/assets/openstudy-workflow.gif" alt="OpenStudy real workflow demo from importing Markdown to practice, Ask AI, Wrong Book, and Insights" width="100%">
+  <img src=".github/assets/openstudy-workflow.gif" alt="OpenStudy real workflow demo showing Markdown import, source review, focused practice, Ask AI, Wrong Book redo, and manual Insights generation" width="100%">
 </p>
 
-The demo above walks through the exact README flow: `Import Markdown -> Edit Source -> Practice -> Ask AI -> Wrong Book -> Redo -> Insights`.
+The demo above follows the real app loop: `Import Markdown -> Review Source -> Practice -> Ask AI -> Wrong Book -> Redo -> Generate Insights`.
 
 ## Markdown-First, Not Markdown-Only
 
@@ -216,23 +216,72 @@ Explanation: @WebMvcTest is used for controller slice testing.
 
 The desktop app and CLI share the same service layer, database, and question standard. The CLI is meant for conversion, ingestion, validation, export, automation, and LLM-backed study workflows.
 
-Common commands:
+<details>
+  <summary><strong>Health, setup, and conversion</strong></summary>
 
 ```bash
-node bin/openstudy.mjs doctor
-node bin/openstudy.mjs docs list
-node bin/openstudy.mjs markdown get 12 -o ./document.md
-node bin/openstudy.mjs questions export 12 --format json -o ./question-set.json
-node bin/openstudy.mjs validate ./question-set.json --format json
-node bin/openstudy.mjs ai insights --doc 12 --limit 80 --language en
+openstudy doctor
+openstudy setup markitdown [--spec "markitdown[all]"]
+openstudy convert <file> [--output out.md] [--lang zh|en]
+openstudy ingest <file> [--title TITLE] [--lang zh|en] [--skip-identify]
 ```
 
-Standard helpers:
+</details>
+
+<details>
+  <summary><strong>Documents and Markdown</strong></summary>
 
 ```bash
-node bin/openstudy.mjs standards markdown --lang en
-node bin/openstudy.mjs standards schema --print
+openstudy docs list
+openstudy docs import <file> [--title TITLE]
+openstudy markdown get <docId> [--output out.md]
+openstudy markdown set <docId> <file.md>
 ```
+
+</details>
+
+<details>
+  <summary><strong>Questions and standards</strong></summary>
+
+```bash
+openstudy questions identify <docId> [--lang zh|en]
+openstudy questions list <docId> [--format json|table]
+openstudy questions export <docId> [--format json|markdown] [--output file]
+openstudy validate <file.(md|json)> [--format markdown|json]
+openstudy exam import <docId> <file.(md|json)>
+openstudy standards schema [--print]
+openstudy standards markdown [--lang zh|en]
+```
+
+</details>
+
+<details>
+  <summary><strong>Practice, wrong book, and stats</strong></summary>
+
+```bash
+openstudy attempts add <questionId> --answer "..." [--correct]
+openstudy attempts wrong
+openstudy attempts recent [--limit 20]
+openstudy attempts clear --all | --doc <docId> | --question <questionId>
+openstudy stats overall
+openstudy stats doc <docId>
+```
+
+</details>
+
+<details>
+  <summary><strong>AI and settings</strong></summary>
+
+```bash
+openstudy ai test
+openstudy ai ask <questionId> --prompt "..."
+openstudy ai grade <questionId> --answer "..." [--save]
+openstudy ai insights [--doc <docId>] [--limit 80] [--language zh|en]
+openstudy settings show
+openstudy settings llm --provider deepseek --model deepseek-chat [--base-url URL] [--api-key KEY] [--vision-model MODEL]
+```
+
+</details>
 
 ## Downloads
 
@@ -283,32 +332,13 @@ npm run dist:linux
 
 Build outputs are written to `release/<version>/`.
 
-## Release Automation
+## TODO List
 
-GitHub Actions builds platform installers on:
-
-- `windows-2025` for Windows `x64`
-- `macos-15` for Apple Silicon macOS `arm64`
-- `ubuntu-24.04` for Linux `x64`
-
-The workflow is triggered only when a new GitHub Release is published.
-
-If a matching file such as `.github/RELEASE_NOTES_v0.1.0.md` exists, the release workflow uses it as the curated release body and appends GitHub's generated notes beneath it.
-
-Generated installers are normalized to a consistent naming scheme:
-
-- `OpenStudy-<version>-windows-x64-installer.exe`
-- `OpenStudy-<version>-macos-arm64.dmg`
-- `OpenStudy-<version>-linux-x64.AppImage`
-- `OpenStudy-<version>-linux-x64.deb`
-
-## Current Scope
-
-OpenStudy is already useful, but it is still intentionally lean:
-
-- Markdown remains the canonical study format even when the original source came from PDF, Office, or HTML.
-- OCR- or vision-heavy imports still depend on the surrounding MarkItDown and model environment.
-- Very large study sets are not yet automatically repartitioned beyond model-context limits.
+- [x] Keep Markdown as the canonical editable study format.
+- [x] Support document ingestion through MarkItDown and a shared CLI workflow.
+- [x] Ship normalized installers for Windows, Apple Silicon macOS, and Linux.
+- [ ] Improve OCR- and vision-heavy import quality beyond the base MarkItDown environment.
+- [ ] Add smarter handling for very large study sets that exceed model-context limits.
 
 ## Contributing
 

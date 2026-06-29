@@ -180,7 +180,7 @@ test.describe('Practice 页面', () => {
     await expect(page.locator('.conversation-message-bubble strong')).toHaveText('重点');
   });
 
-  test('左侧主区域底部常驻上一题、提交、下一题，并显示分割线', async ({ page }) => {
+  test('左侧主区域底部常驻上一题、提交、答案、下一题，并显示分割线', async ({ page }) => {
     await installApiMock(page, {
       questions: [sampleQuestions[0]],
       documents: [],
@@ -208,7 +208,9 @@ test.describe('Practice 页面', () => {
     expect(metrics?.borderTopStyle).toBe('solid');
 
     await expect(page.getByRole('button', { name: '上一题' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '上一题' })).toBeDisabled();
     await expect(page.getByRole('button', { name: '提交' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '答案' })).toBeVisible();
     await expect(page.getByRole('button', { name: '下一题' })).toBeVisible();
   });
 });

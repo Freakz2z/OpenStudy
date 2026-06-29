@@ -1,20 +1,13 @@
 # Build Resources
 
-`electron-builder` 在打包时会从这个目录读取图标：
+OpenStudy 现在统一以 [`public/app_icon.png`](../public/app_icon.png) 作为应用图标源文件。
 
-- `icon.icns`（macOS，至少 512×512）
-- `icon.ico`（Windows，至少 256×256）
-- `icon.png`（Linux，512×512）
-- `installerIcon.ico`（Windows NSIS 安装器）
+- Electron 运行时会直接使用 `app_icon.png`
+- `electron-builder` 也会以同一张 PNG 作为默认打包图标输入
+- 如果后续需要额外生成 `.icns`、`.ico` 等平台产物，也请从这张 PNG 派生，不再维护额外的命名分支
 
-如果未提供这些文件，electron-builder 会回退到默认 Electron 图标，但建议补齐以得到更好的安装体验。
-
-## 临时占位
-
-打包前请把对应平台的图标放到此目录。可以用 [electron-icon-builder](https://www.npmjs.com/package/electron-icon-builder) 一张 PNG 自动生成全套图标。
-
-命令：
+如果你需要生成平台图标，可以继续用 [electron-icon-builder](https://www.npmjs.com/package/electron-icon-builder) 从同一个源文件导出：
 
 ```bash
-npx electron-icon-builder --input=resources/icon-source.png --output=resources
+npx electron-icon-builder --input=public/app_icon.png --output=resources
 ```

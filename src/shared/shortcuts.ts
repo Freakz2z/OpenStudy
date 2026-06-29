@@ -2,6 +2,7 @@ export type ShortcutActionKey =
   | 'practiceSubmit'
   | 'practiceNext'
   | 'practicePrev'
+  | 'practiceRevealAnswer'
   | 'practiceOptionPrev'
   | 'practiceOptionNext';
 
@@ -18,6 +19,7 @@ export interface ShortcutSettings {
   practiceSubmit: ShortcutBinding;
   practiceNext: ShortcutBinding;
   practicePrev: ShortcutBinding;
+  practiceRevealAnswer: ShortcutBinding;
   practiceOptionPrev: ShortcutBinding;
   practiceOptionNext: ShortcutBinding;
 }
@@ -26,6 +28,7 @@ export const DEFAULT_SHORTCUTS: ShortcutSettings = {
   practiceSubmit: { key: 'Enter' },
   practiceNext: { key: 'Enter' },
   practicePrev: { key: 'ArrowLeft' },
+  practiceRevealAnswer: { key: 'Space' },
   practiceOptionPrev: { key: 'ArrowUp' },
   practiceOptionNext: { key: 'ArrowDown' },
 };
@@ -44,6 +47,7 @@ const KEY_ALIASES: Record<string, string> = {
 
 export function normalizeShortcutKey(key: string | null | undefined): string | null {
   if (!key) return null;
+  if (key === ' ') return 'Space';
   const trimmed = key.trim();
   if (!trimmed) return null;
   const alias = KEY_ALIASES[trimmed.toLowerCase()];
@@ -78,6 +82,10 @@ export function normalizeShortcutSettings(
     ),
     practiceNext: normalizeShortcutBinding(shortcuts?.practiceNext, DEFAULT_SHORTCUTS.practiceNext),
     practicePrev: normalizeShortcutBinding(shortcuts?.practicePrev, DEFAULT_SHORTCUTS.practicePrev),
+    practiceRevealAnswer: normalizeShortcutBinding(
+      shortcuts?.practiceRevealAnswer,
+      DEFAULT_SHORTCUTS.practiceRevealAnswer,
+    ),
     practiceOptionPrev: normalizeShortcutBinding(
       shortcuts?.practiceOptionPrev,
       DEFAULT_SHORTCUTS.practiceOptionPrev,

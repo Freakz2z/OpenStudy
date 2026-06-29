@@ -188,12 +188,14 @@
     "buttons": {
       "prev": "上一题",
       "submit": "提交",
+      "answer": "答案",
       "submitting": "提交中…",
       "next": "下一题"
     },
     "result": {
       "correct": "正确",
       "wrong": "错误",
+      "answerRevealed": "已展开参考答案",
       "yourAnswerLabel": "你的答案：",
       "yourAnswer": "你的答案：{{text}}",
       "yourAnswerEmpty": "（未作答）",
@@ -325,7 +327,7 @@
     },
     "shortcuts": {
       "title": "快捷键",
-      "subtitle": "自定义做题时常用的操作键位",
+      "subtitle": "自定义做题时常用的操作键位，修改后自动保存",
       "save": "保存快捷键",
       "saved": "已保存",
       "reset": "恢复默认",
@@ -343,6 +345,10 @@
         "practicePrev": {
           "title": "上一题",
           "description": "做题页返回上一题。"
+        },
+        "practiceRevealAnswer": {
+          "title": "查看答案",
+          "description": "做题页直接展开参考答案与解析。"
         },
         "practiceOptionPrev": {
           "title": "上一选项",

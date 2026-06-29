@@ -59,6 +59,20 @@ test.describe('答题快捷键', () => {
     await expect(page.getByText('✓ 正确')).toBeVisible();
   });
 
+  test('Space 可以直接展开参考答案', async ({ page }) => {
+    await installApiMock(page, {
+      questions: [sampleQuestions[0]],
+    });
+    await page.goto('/#/practice/2');
+    await page.locator('body').click({ position: { x: 5, y: 5 } });
+    await page.keyboard.press('Space');
+    await expect(page.getByText('已展开参考答案')).toBeVisible();
+    await expect(page.getByText('参考答案：')).toBeVisible();
+    await expect(
+      page.locator('.practice-result-card .answer-panel').filter({ hasText: /^B\. 北京$/ }).first(),
+    ).toBeVisible();
+  });
+
   test('判分后再按回车进入下一题', async ({ page }) => {
     await installApiMock(page, {
       questions: sampleQuestions.slice(0, 2),

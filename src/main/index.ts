@@ -1,4 +1,5 @@
 import { app, BrowserWindow, shell } from 'electron';
+import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { registerIpcHandlers } from './ipc/index.js';
 
@@ -46,11 +47,24 @@ if (process.env.OPENSTUDY_MOCK_LLM) {
 let mainWindow: BrowserWindow | null = null;
 
 function getAppIconPath(): string {
-  const isMac = process.platform === 'darwin';
   if (app.isPackaged) {
-    return join(process.resourcesPath, isMac ? 'app_icon_macos.png' : 'app_icon.png');
+    return join(process.resourcesPath, 'app_icon.png');
   }
-  return join(app.getAppPath(), isMac ? 'resources/icon-macos.png' : 'resources/icon.png');
+
+  const candidates = [
+    join(app.getAppPath(), 'public', 'app_icon.png'),
+    join(app.getAppPath(), '..', '..', 'public', 'app_icon.png'),
+    join(process.cwd(), 'public', 'app_icon.png'),
+    join(app.getAppPath(), 'resources', 'app_icon.png'),
+    join(app.getAppPath(), '..', '..', 'resources', 'app_icon.png'),
+    join(process.cwd(), 'resources', 'app_icon.png'),
+  ];
+
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) return candidate;
+  }
+
+  return candidates[candidates.length - 1];
 }
 
 function createWindow(): void {

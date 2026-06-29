@@ -4,7 +4,31 @@ import { dirname, join } from 'node:path';
 
 const APP_DIR_NAME = 'OpenStudy';
 
-export function resolveAppDataDir(): string {
+export function resolveUserDataDirArg(argv: readonly string[] = process.argv): string | null {
+  for (let index = 0; index < argv.length; index += 1) {
+    const current = argv[index];
+    if (!current) continue;
+    if (current.startsWith('--user-data-dir=')) {
+      const value = current.slice('--user-data-dir='.length).trim();
+      return value || null;
+    }
+    if (current === '--user-data-dir') {
+      const next = argv[index + 1]?.trim();
+      if (next && !next.startsWith('--')) {
+        return next;
+      }
+      return null;
+    }
+  }
+  return null;
+}
+
+export function resolveAppDataDir(argv: readonly string[] = process.argv): string {
+  const cliOverride = resolveUserDataDirArg(argv);
+  if (cliOverride) {
+    return cliOverride;
+  }
+
   if (process.env.OPENSTUDY_DATA_DIR?.trim()) {
     return process.env.OPENSTUDY_DATA_DIR.trim();
   }

@@ -43,7 +43,7 @@ test.describe('「关于」页面', () => {
       questions: [],
     });
     await page.goto('/#/settings');
-    await page.getByRole('button', { name: 'English' }).click();
+    await page.locator('.settings-language-field select').selectOption('en');
     await page.waitForTimeout(500);
     await page.goto('/#/about');
     await expect(page.getByRole('heading', { name: 'About' })).toBeVisible();

@@ -10,6 +10,7 @@ describe('shortcuts', () => {
   it('normalizes shortcut keys and aliases', () => {
     expect(normalizeShortcutKey('s')).toBe('S');
     expect(normalizeShortcutKey(' left ')).toBe('ArrowLeft');
+    expect(normalizeShortcutKey(' ')).toBe('Space');
     expect(normalizeShortcutKey('spacebar')).toBe('Space');
     expect(normalizeShortcutKey('')).toBeNull();
   });

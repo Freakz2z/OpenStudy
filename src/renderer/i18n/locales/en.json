@@ -188,12 +188,14 @@
     "buttons": {
       "prev": "Previous",
       "submit": "Submit",
+      "answer": "Answer",
       "submitting": "Submitting…",
       "next": "Next"
     },
     "result": {
       "correct": "Correct",
       "wrong": "Wrong",
+      "answerRevealed": "Reference answer revealed",
       "yourAnswerLabel": "Your answer:",
       "yourAnswer": "Your answer: {{text}}",
       "yourAnswerEmpty": "(empty)",
@@ -325,7 +327,7 @@
     },
     "shortcuts": {
       "title": "Shortcuts",
-      "subtitle": "Customize the keys used most often during practice.",
+      "subtitle": "Customize the keys used most often during practice. Changes save automatically.",
       "save": "Save shortcuts",
       "saved": "Saved",
       "reset": "Restore defaults",
@@ -343,6 +345,10 @@
         "practicePrev": {
           "title": "Previous question",
           "description": "Return to the previous question in practice."
+        },
+        "practiceRevealAnswer": {
+          "title": "Reveal answer",
+          "description": "Open the reference answer and explanation in practice."
         },
         "practiceOptionPrev": {
           "title": "Previous option",

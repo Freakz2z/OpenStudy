@@ -28,6 +28,8 @@ interface Props {
   hasNext: boolean;
 }
 
+type RevealMode = 'submitted' | 'answer' | null;
+
 function cleanSection(s: string | null | undefined): string | null {
   if (!s) return null;
   return s.replace(/第\s*\d+\s*\/\s*\d+\s*段\s*/g, '').trim() || null;
@@ -79,6 +81,7 @@ export default function QuestionCard({
   const [fill, setFill] = useState('');
   const [short, setShort] = useState('');
   const [revealed, setRevealed] = useState(false);
+  const [revealMode, setRevealMode] = useState<RevealMode>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -97,6 +100,7 @@ export default function QuestionCard({
     aiOpen,
     optionCursor,
     question,
+    revealMode,
   });
   stateRef.current = {
     revealed,
@@ -110,6 +114,7 @@ export default function QuestionCard({
     aiOpen,
     optionCursor,
     question,
+    revealMode,
   };
 
   const onSubmitRef = useRef(onSubmit);
@@ -152,6 +157,12 @@ export default function QuestionCard({
     return nextValue;
   }
 
+  function setRevealModeState(nextValue: RevealMode): RevealMode {
+    stateRef.current.revealMode = nextValue;
+    setRevealMode(nextValue);
+    return nextValue;
+  }
+
   function setOptionCursorState(nextValue: number): number {
     stateRef.current.optionCursor = nextValue;
     setOptionCursor(nextValue);
@@ -164,6 +175,7 @@ export default function QuestionCard({
     setFillState(question.type === 'fill' ? nextAnswer : '');
     setShortState(question.type === 'short' || question.type === 'code' ? nextAnswer : '');
     setRevealedState(false);
+    setRevealModeState(null);
     setIsCorrect(null);
     setFeedback(null);
     setSubmittingState(false);
@@ -220,6 +232,7 @@ export default function QuestionCard({
         setIsCorrect(result.isCorrect);
         setFeedback(result.reason || fallback.reason);
         setRevealedState(true);
+        setRevealModeState('submitted');
         onSubmit(nextAnswer, result.isCorrect, result.reason || fallback.reason);
         return;
       }
@@ -228,12 +241,21 @@ export default function QuestionCard({
       setIsCorrect(ok);
       setFeedback(null);
       setRevealedState(true);
+      setRevealModeState('submitted');
       onSubmit(nextAnswer, ok, null);
     } finally {
       setSubmittingState(false);
     }
   }
   submitCurrentAnswerRef.current = submitCurrentAnswer;
+
+  function revealReferenceAnswer() {
+    if (stateRef.current.revealed || stateRef.current.submitting) return;
+    setIsCorrect(null);
+    setFeedback(null);
+    setRevealedState(true);
+    setRevealModeState('answer');
+  }
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -270,6 +292,17 @@ export default function QuestionCard({
           e.preventDefault();
           onNextRef.current();
         }
+        return;
+      }
+
+      if (
+        !s.aiOpen &&
+        matchesShortcut(e, s.shortcuts.practiceRevealAnswer) &&
+        !(inTextComposer && !hasAnyModifier(s.shortcuts.practiceRevealAnswer))
+      ) {
+        if (s.submitting || s.revealed) return;
+        e.preventDefault();
+        revealReferenceAnswer();
         return;
       }
 
@@ -454,12 +487,19 @@ export default function QuestionCard({
 
         {revealed ? (
           <div className="practice-result-card">
-            <div
-              className={`practice-result-status ${isCorrect ? 'success' : 'error'}`}
-              role="status"
-            >
-              {isCorrect ? `✓ ${t('practice.result.correct')}` : `✗ ${t('practice.result.wrong')}`}
-            </div>
+            {revealMode === 'submitted' && isCorrect !== null && (
+              <div
+                className={`practice-result-status ${isCorrect ? 'success' : 'error'}`}
+                role="status"
+              >
+                {isCorrect ? `✓ ${t('practice.result.correct')}` : `✗ ${t('practice.result.wrong')}`}
+              </div>
+            )}
+            {revealMode === 'answer' && (
+              <div className="practice-result-status" role="status">
+                {t('practice.result.answerRevealed')}
+              </div>
+            )}
 
             <div className="practice-result-block">
               <div className="muted">{t('practice.result.yourAnswerLabel')}</div>
@@ -503,6 +543,14 @@ export default function QuestionCard({
           }}
         >
           {submitting ? t('practice.buttons.submitting') : t('practice.buttons.submit')}
+        </button>
+        <button
+          type="button"
+          className="ghost"
+          disabled={revealed || submitting}
+          onClick={revealReferenceAnswer}
+        >
+          {t('practice.buttons.answer')}
         </button>
         <button type="button" className="ghost" disabled={!hasNext || submitting} onClick={onNext}>
           {t('practice.buttons.next')}

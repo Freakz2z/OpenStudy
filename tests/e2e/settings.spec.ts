@@ -126,7 +126,8 @@ test.describe('Models 页面', () => {
     await installApiMock(page);
     await page.goto('/#/settings');
 
-    await expect(page.locator('.settings-shortcut-row')).toHaveCount(5);
+    await expect(page.locator('.settings-shortcut-row')).toHaveCount(6);
+    await expect(page.getByText('查看答案')).toBeVisible();
     await expect(page.getByText('保存当前题')).toHaveCount(0);
     await expect(page.getByText('全部保存')).toHaveCount(0);
   });
