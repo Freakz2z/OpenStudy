@@ -24,8 +24,10 @@
 </div>
 
 <p align="center">
-  <img src=".github/assets/usage-flow.svg" alt="OpenStudy usage flow" width="100%">
+  <img src=".github/assets/openstudy-workflow.gif" alt="OpenStudy real workflow demo from importing Markdown to practice, Ask AI, Wrong Book, and Insights" width="100%">
 </p>
+
+<p align="center"><em>A real workflow GIF: import Markdown, review the source, practice, Ask AI, redo from Wrong Book, and finish in Insights.</em></p>
 
 ## Why OpenStudy
 
@@ -40,7 +42,7 @@ Instead of treating a Markdown note set as a dead asset, OpenStudy turns it into
 - Review mistakes, retry questions, and track progress over time.
 - Generate study insights manually when you actually want them, not every time you open the page.
 
-## Highlights
+## What You Can Do
 
 - **Markdown-first by default**: keep your source material editable, durable, and versionable.
 - **AI cleanup, not AI chaos**: turn rough notes into usable questions without giving up structure.
@@ -49,17 +51,139 @@ Instead of treating a Markdown note set as a dead asset, OpenStudy turns it into
 - **Review that compounds**: revisit wrong answers, track weak spots, and generate insights only when needed.
 - **Ready to distribute**: ship installers for Windows, Apple Silicon macOS, and Linux from one release flow.
 
-## Usage Flow
+## At A Glance
 
-OpenStudy is designed as a closed learning loop, not just a one-way content formatter. The current diagram above is still a placeholder visual and will be replaced later.
+1. **Import Markdown**: start from a Markdown question bank and bring it straight into a durable study workspace.
+2. **Review and practice**: inspect the source, launch a focused quiz flow, and use keyboard-friendly actions for repetition.
+3. **Ask AI in context**: get hints or explanations without leaving the current question.
+4. **Close the loop**: revisit mistakes in Wrong Book and generate Insights manually when you are ready to reflect.
 
-## Screenshots
+The GIF above walks through the exact README demo flow: `Import Markdown -> Edit Source -> Practice -> Ask AI -> Wrong Book -> Redo -> Insights`.
 
-<p align="center">
-  <img src=".github/assets/screenshots/openstudy-library.png" alt="OpenStudy library view" width="32.5%">
-  <img src=".github/assets/screenshots/openstudy-practice.png" alt="OpenStudy practice view" width="32.5%">
-  <img src=".github/assets/screenshots/openstudy-insights.png" alt="OpenStudy insights view" width="32.5%">
-</p>
+## Standards
+
+OpenStudy is Markdown-first, but it is not "anything goes" Markdown. We use one stable question standard so AI cleanup, parsing, retry flows, and review all behave predictably.
+
+- Field labels stay ASCII: `Type:`, `Answer:`, `Explanation:`, optionally `Topic:` and `Tags:`.
+- Allowed `Type` values are `choice`, `multiple`, `judge`, `fill`, `short`, and `code`.
+- `Type:` should appear inside each question block before `Answer:`.
+- For code-analysis questions, keep the code block with the stem and place `Type:` below the options, not above the code.
+
+<details>
+  <summary><strong>choice</strong> - Multiple Choice</summary>
+
+```md
+## Multiple Choice
+
+### 1. Which JUnit 5 API is used to verify an exception?
+
+- A. assertThrows
+- B. assertAll
+- C. assertEquals
+- D. assertNotNull
+
+Type: choice
+Answer: A
+Explanation: JUnit 5 uses assertThrows to verify exceptions.
+```
+
+</details>
+
+<details>
+  <summary><strong>multiple</strong> - Multiple Select</summary>
+
+```md
+## Multiple Select
+
+### 1. Which of the following are JUnit 5 annotations?
+
+- A. @Test
+- B. @BeforeAll
+- C. @Override
+- D. @Disabled
+
+Type: multiple
+Answer: ABD
+Explanation: @Override is a Java annotation, not a JUnit 5 annotation.
+```
+
+</details>
+
+<details>
+  <summary><strong>judge</strong> - True or False</summary>
+
+```md
+## True or False
+
+### 1. @WebMvcTest is a full Spring integration testing annotation.
+
+- [ ] True
+- [ ] False
+
+Type: judge
+Answer: False
+Explanation: @WebMvcTest only loads the web layer slice.
+```
+
+</details>
+
+<details>
+  <summary><strong>fill</strong> - Fill in the Blank</summary>
+
+```md
+## Fill in the Blank
+
+### 1. The Spring Boot annotation used for controller tests is ____.
+
+Type: fill
+Answer: @WebMvcTest
+Explanation: It is used for web-layer slice testing.
+```
+
+</details>
+
+<details>
+  <summary><strong>short</strong> - Short Answer</summary>
+
+```md
+## Short Answer
+
+### 1. Briefly describe the basic TDD workflow.
+
+Type: short
+Answer: Red, green, refactor.
+Explanation: A semantically equivalent answer is acceptable.
+```
+
+</details>
+
+<details>
+  <summary><strong>code</strong> - Code Analysis</summary>
+
+````md
+## Code Analysis
+
+### 1. Read the code below. Which description is correct?
+
+```java
+@WebMvcTest(UserController.class)
+public class UserApiTest {
+    @Autowired
+    private MockMvc mockMvc;
+}
+```
+
+- A. It loads every Spring bean
+- B. It is used for controller slice testing
+- C. It automatically launches a browser
+- D. It is only used for database migration
+
+Type: code
+Answer: B
+Explanation: @WebMvcTest is used for controller slice testing.
+````
+
+</details>
 
 ## Downloads
 
@@ -136,10 +260,6 @@ OpenStudy is already useful, but it is still intentionally lean:
 - The product direction is now firmly Markdown-first.
 - Very large Markdown sets are not yet automatically restructured beyond model limits.
 - The project is still evolving toward a more complete open-source study workflow.
-
-## Open Source Notes
-
-The repository is being prepared for a fuller open-source release experience, including polished documentation, cross-platform packaging, and release automation.
 
 ## Contributing
 

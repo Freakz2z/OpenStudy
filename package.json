@@ -32,6 +32,7 @@
     "dist:linux": "electron-vite build && electron-builder --linux --publish never",
     "artifacts:collect": "node scripts/collect-release-artifacts.mjs",
     "docs:screenshots": "node scripts/capture-readme-screenshots.mjs",
+    "docs:workflow-gif": "node scripts/capture-readme-workflow-gif.mjs",
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
     "test:integration": "electron-vite build && PW_TEST_MODE=electron playwright test tests/integration",
