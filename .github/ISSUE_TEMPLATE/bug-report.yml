@@ -1,0 +1,63 @@
+name: Bug Report
+description: Report a bug, regression, or packaging problem in OpenStudy.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this issue.
+
+        感谢反馈问题。请尽量把复现条件写完整，这会明显加快定位速度。
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Which OpenStudy version are you using?
+      placeholder: e.g. v0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: Which platform is affected?
+      options:
+        - Windows
+        - macOS (Apple Silicon)
+        - Linux
+        - Other / Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the bug or regression clearly.
+      placeholder: Tell us what you expected and what actually happened.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Please provide stable reproduction steps.
+      placeholder: |
+        1. Go to ...
+        2. Click ...
+        3. Import ...
+        4. See error ...
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs, screenshots, or recordings
+      description: Paste logs or attach screenshots/videos if available.
+      render: shell
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add anything else that could help us debug this issue.

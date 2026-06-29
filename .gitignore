@@ -1,0 +1,15 @@
+node_modules
+out
+dist
+.DS_Store
+.claude
+*.log
+.vite
+.electron
+release
+build
+*.tsbuildinfo
+test-results
+playwright-report
+tmp
+dist-artifacts

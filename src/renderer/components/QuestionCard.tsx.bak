@@ -1,0 +1,331 @@
+import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import type { Question } from '@shared/types';
+import { formatQuestionAnswerDisplay } from '@shared/question-format';
+
+interface ReviewState {
+  userAnswer: string;
+  isCorrect: boolean;
+}
+
+interface Props {
+  question: Question;
+  review?: ReviewState | null;
+  onSubmit: (userAnswer: string, isCorrect: boolean) => void;
+  onNext: () => void;
+}
+
+function normalizeChoice(ans: string): string {
+  const t = ans.trim();
+  if (/^[A-Za-z]$/.test(t)) return t.toUpperCase();
+  const m = t.match(/^([A-Za-z])[.、)\]）\s]/);
+  if (m) return m[1].toUpperCase();
+  return t.charAt(0).toUpperCase();
+}
+
+function optionLetter(option: string, idx: number): string {
+  const normalized = normalizeChoice(option);
+  if (/^[A-Z]$/.test(normalized)) return normalized;
+  return String.fromCharCode(65 + idx);
+}
+
+function optionText(option: string): string {
+  const match = option.match(/^\s*[A-Ha-h][.、:：)\]）]\s*(.+)$/);
+  return match?.[1]?.trim() || option.trim();
+}
+
+function cleanSection(s: string | null | undefined): string | null {
+  if (!s) return null;
+  return s.replace(/第\s*\d+\s*\/\s*\d+\s*段\s*/g, '').trim() || null;
+}
+
+function looksLikeCode(s: string): boolean {
+  if (!s) return false;
+  if (/\n/.test(s)) return true;
+  if (
+    /(\bfunction\b|\bconst\b|\blet\b|\bclass\b|\bimport\b|\breturn\b|\bawait\b|\basync\b|=>|===|!==)/.test(
+      s,
+    )
+  )
+    return true;
+  if (/\b\w+\(\)\s*=>/.test(s)) return true;
+  return false;
+}
+
+function checkAnswer(q: Question, userAnswer: string): boolean {
+  const u = userAnswer.trim();
+  if (!u) return false;
+  if (q.type === 'choice') {
+    return normalizeChoice(u) === normalizeChoice(q.answer);
+  }
+  if (q.type === 'fill') {
+    const norm = (s: string) =>
+      s.replace(/[\s　，。、,.；;：:！!？?'''""]/g, '').toLowerCase();
+    return norm(u) === norm(q.answer);
+  }
+  const keywords = q.answer
+    .split(/[，。、,.；; \n]+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length >= 2);
+  const stripParticles = (s: string) => s.replace(/[的了着过]/g, '');
+  if (keywords.length === 0) {
+    return stripParticles(u).toLowerCase().includes(stripParticles(q.answer).toLowerCase());
+  }
+  const lower = stripParticles(u).toLowerCase();
+  const hit = keywords.filter((k) =>
+    lower.includes(stripParticles(k).toLowerCase()),
+  ).length;
+  return hit >= 1 && hit / keywords.length >= 0.6;
+}
+
+function currentUserAnswer(
+  choice: string,
+  fill: string,
+  short: string,
+  type: string,
+): string {
+  if (type === 'choice') return choice;
+  if (type === 'fill') return fill;
+  return short;
+}
+
+export default function QuestionCard({
+  question,
+  review,
+  onSubmit,
+  onNext,
+}: Props) {
+  const { t } = useTranslation();
+  const [choice, setChoice] = useState('');
+  const [fill, setFill] = useState('');
+  const [short, setShort] = useState('');
+  const [revealed, setRevealed] = useState(false);
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+
+  const stateRef = useRef({
+    revealed,
+    choice,
+    fill,
+    short,
+    question,
+  });
+  stateRef.current = { revealed, choice, fill, short, question };
+
+  const onSubmitRef = useRef(onSubmit);
+  onSubmitRef.current = onSubmit;
+  const onNextRef = useRef(onNext);
+  onNextRef.current = onNext;
+
+  useEffect(() => {
+    const nextAnswer = review?.userAnswer ?? '';
+    setChoice(question.type === 'choice' ? nextAnswer : '');
+    setFill(question.type === 'fill' ? nextAnswer : '');
+    setShort(question.type === 'short' ? nextAnswer : '');
+    setRevealed(Boolean(review));
+    setIsCorrect(review?.isCorrect ?? null);
+    if (!review && question.type !== 'choice') {
+      requestAnimationFrame(() => inputRef.current?.focus());
+    }
+  }, [question.id, question.type, review]);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const s = stateRef.current;
+      const target = e.target as HTMLElement;
+      const tag = target.tagName;
+
+      if (e.key === 'Enter') {
+        const inTextarea = tag === 'TEXTAREA';
+        if (inTextarea && e.shiftKey) return;
+        if (inTextarea) e.preventDefault();
+        if (!s.revealed) {
+          const ua =
+            s.question.type === 'choice'
+              ? s.choice
+              : s.question.type === 'fill'
+                ? s.fill
+                : s.short;
+          if (!ua.trim()) return;
+          const ok = checkAnswer(s.question, ua);
+          setIsCorrect(ok);
+          setRevealed(true);
+          onSubmitRef.current(ua, ok);
+        } else {
+          onNextRef.current();
+        }
+        return;
+      }
+
+      const inInput = tag === 'INPUT' || tag === 'TEXTAREA';
+      if (
+        !s.revealed &&
+        s.question.type === 'choice' &&
+        s.question.options &&
+        !inInput
+      ) {
+        const k = e.key.toUpperCase();
+        const idx = k.charCodeAt(0) - 65;
+        if (idx >= 0 && idx < s.question.options.length) {
+          setChoice(s.question.options[idx]);
+        }
+      }
+    }
+
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  const ua = currentUserAnswer(choice, fill, short, question.type);
+  const canSubmit = ua.trim().length > 0;
+  const displaySection = cleanSection(question.page_or_section);
+  const displayUserAnswer =
+    question.type === 'choice'
+      ? (ua
+          ? formatQuestionAnswerDisplay(question.type, ua, question.options)
+          : t('practice.result.yourAnswerEmpty'))
+      : (ua || t('practice.result.yourAnswerEmpty'));
+  const displayReferenceAnswer = formatQuestionAnswerDisplay(
+    question.type,
+    question.answer,
+    question.options,
+  );
+  const typeLabel =
+    question.type === 'choice'
+      ? t('practice.types.choice')
+      : question.type === 'fill'
+        ? t('practice.types.fill')
+        : t('practice.types.short');
+
+  return (
+    <div className="practice-question-card">
+      <div className="practice-question-meta">
+        <span className="badge muted">{typeLabel}</span>
+        {displaySection && <span className="badge muted">{displaySection}</span>}
+        <span className="practice-question-shortcut">
+          {question.type === 'choice'
+            ? t('practice.hint.letter')
+            : question.type === 'short'
+              ? t('practice.hint.shiftEnter')
+              : t('practice.hint.enter')}
+        </span>
+      </div>
+
+      <div
+        className={`practice-question-stem${looksLikeCode(question.stem) ? ' is-code' : ''}`}
+      >
+        {question.stem}
+      </div>
+
+      {question.type === 'choice' && question.options && (
+        <div className="practice-options">
+          {question.options.map((opt, idx) => {
+            const letter = optionLetter(opt, idx);
+            const displayText = optionText(opt);
+            const isRight = revealed && letter === normalizeChoice(question.answer);
+            const isPickedWrong =
+              revealed && letter === normalizeChoice(choice) && !isCorrect;
+
+            return (
+              <label
+                key={`${opt}-${idx}`}
+                className={`question-option${isRight ? ' correct' : isPickedWrong ? ' wrong' : ''}`}
+              >
+                <input
+                  type="radio"
+                  name={`choice-${question.id}`}
+                  value={opt}
+                  disabled={revealed}
+                  checked={normalizeChoice(choice) === letter}
+                  onChange={() => setChoice(opt)}
+                />
+                <span className="option-letter">{`${letter}. `}</span>
+                <span
+                  className={`question-option-text${looksLikeCode(displayText) ? ' is-code' : ''}`}
+                >
+                  {displayText}
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      )}
+
+      {question.type === 'fill' && (
+        <input
+          ref={inputRef as React.RefObject<HTMLInputElement>}
+          value={fill}
+          disabled={revealed}
+          className={revealed ? (isCorrect ? 'answer-input correct' : 'answer-input wrong') : 'answer-input'}
+          onChange={(e) => setFill(e.target.value)}
+          placeholder={t('practice.placeholder.fill')}
+        />
+      )}
+
+      {question.type === 'short' && (
+        <textarea
+          ref={inputRef as React.RefObject<HTMLTextAreaElement>}
+          value={short}
+          disabled={revealed}
+          className={revealed ? (isCorrect ? 'answer-input correct' : 'answer-input wrong') : 'answer-input'}
+          onChange={(e) => setShort(e.target.value)}
+          rows={4}
+          placeholder={t('practice.placeholder.short')}
+          style={{ fontFamily: 'inherit' }}
+        />
+      )}
+
+      {revealed ? (
+        <div className="practice-result-card">
+          <div
+            className={`practice-result-status ${isCorrect ? 'success' : 'error'}`}
+            role="status"
+          >
+            {isCorrect ? `✓ ${t('practice.result.correct')}` : `✗ ${t('practice.result.wrong')}`}
+          </div>
+
+          <div className="practice-result-block">
+            <div className="muted">{t('practice.result.yourAnswerLabel')}</div>
+            <div className="answer-panel">
+              {displayUserAnswer}
+            </div>
+          </div>
+
+          <div className="practice-result-block">
+            <div className="muted">{t('practice.result.reference')}</div>
+            <div className="answer-panel">{displayReferenceAnswer}</div>
+          </div>
+
+          {question.explanation && (
+            <div className="practice-result-block">
+              <div className="muted">{t('practice.result.explanation')}</div>
+              <div className="answer-panel explanation">{question.explanation}</div>
+            </div>
+          )}
+
+          <div className="practice-result-actions">
+            <button className="primary" onClick={onNext}>
+              {t('practice.buttons.next')}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="practice-submit-row">
+          <button
+            className="primary"
+            disabled={!canSubmit}
+            onClick={() => {
+              const nextAnswer = currentUserAnswer(choice, fill, short, question.type);
+              const ok = checkAnswer(question, nextAnswer);
+              setIsCorrect(ok);
+              setRevealed(true);
+              onSubmit(nextAnswer, ok);
+            }}
+          >
+            {t('practice.buttons.judge')}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}

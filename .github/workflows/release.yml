@@ -1,0 +1,105 @@
+name: Release
+
+on:
+  release:
+    types:
+      - published
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows x64
+            os: windows-2025
+            build_command: npm run dist:win
+            artifact_name: openstudy-windows-x64
+          - name: macOS arm64
+            os: macos-15
+            build_command: npm run dist:mac
+            artifact_name: openstudy-macos-arm64
+          - name: Linux x64
+            os: ubuntu-24.04
+            build_command: npm run dist:linux
+            artifact_name: openstudy-linux-x64
+
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Build installers
+        run: ${{ matrix.build_command }}
+
+      - name: Collect normalized artifacts
+        run: npm run artifacts:collect
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: dist-artifacts/*
+          if-no-files-found: error
+
+  publish:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          pattern: openstudy-*
+          merge-multiple: true
+
+      - name: Detect release notes
+        id: release_notes
+        run: |
+          file=".github/RELEASE_NOTES_${{ github.event.release.tag_name }}.md"
+          if [ -f "$file" ]; then
+            echo "has_custom_notes=true" >> "$GITHUB_OUTPUT"
+            echo "body_path=$file" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_custom_notes=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish release assets with custom notes
+        if: steps.release_notes.outputs.has_custom_notes == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-assets/*
+          body_path: ${{ steps.release_notes.outputs.body_path }}
+          append_body: true
+          generate_release_notes: true
+
+      - name: Publish release assets
+        if: steps.release_notes.outputs.has_custom_notes != 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-assets/*
+          generate_release_notes: true

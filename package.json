@@ -1,0 +1,148 @@
+{
+  "name": "openstudy",
+  "version": "0.1.0",
+  "description": "AI-powered document-to-quiz desktop workspace for practice, review, and study insights",
+  "license": "MIT",
+  "author": {
+    "name": "Freakz3z",
+    "email": "3020517046@qq.com"
+  },
+  "homepage": "https://github.com/Freakz3z/OpenStudy",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Freakz3z/OpenStudy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Freakz3z/OpenStudy/issues"
+  },
+  "main": "out/main/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "start": "electron-vite preview",
+    "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
+    "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
+    "typecheck": "npm run typecheck:node && npm run typecheck:web",
+    "pack": "electron-vite build && electron-builder --dir",
+    "dist": "electron-vite build && electron-builder",
+    "dist:mac": "electron-vite build && electron-builder --mac dmg --arm64",
+    "dist:win": "electron-vite build && electron-builder --win",
+    "dist:linux": "electron-vite build && electron-builder --linux",
+    "artifacts:collect": "node scripts/collect-release-artifacts.mjs",
+    "docs:screenshots": "node scripts/capture-readme-screenshots.mjs",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test",
+    "test:integration": "electron-vite build && PW_TEST_MODE=electron playwright test tests/integration",
+    "test": "npm run test:unit && npm run test:e2e",
+    "postinstall": "electron-rebuild -f -w better-sqlite3"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "electron-store": "^10.0.0",
+    "i18next": "^26.3.2",
+    "json5": "^2.2.3",
+    "jszip": "^3.10.1",
+    "lucide-react": "^1.21.0",
+    "mammoth": "^1.8.0",
+    "pdfjs-dist": "^4.7.76",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-i18next": "^17.0.8",
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^6.27.0",
+    "remark-gfm": "^4.0.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/jszip": "^3.4.0",
+    "@types/node": "^22.7.5",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.2",
+    "electron": "^32.1.2",
+    "electron-builder": "^25.0.5",
+    "electron-rebuild": "^3.2.9",
+    "electron-vite": "^2.3.0",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.8",
+    "vitest": "^4.1.9"
+  },
+  "build": {
+    "appId": "com.openstudy.app",
+    "productName": "OpenStudy",
+    "directories": {
+      "output": "release/${version}",
+      "buildResources": "resources"
+    },
+    "icon": "resources/icon.png",
+    "extraResources": [
+      {
+        "from": "public/app_icon.png",
+        "to": "app_icon.png"
+      },
+      {
+        "from": "public/app_icon-macos.png",
+        "to": "app_icon_macos.png"
+      }
+    ],
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/better-sqlite3/**"
+    ],
+    "mac": {
+      "icon": "resources/icon-macos.png",
+      "category": "public.app-category.education",
+      "artifactName": "${productName}-${version}-macos-${arch}.${ext}",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ]
+    },
+    "win": {
+      "artifactName": "${productName}-${version}-windows-${arch}-installer.${ext}",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "linux": {
+      "artifactName": "${productName}-${version}-linux-${arch}.${ext}",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "category": "Education"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
+  }
+}

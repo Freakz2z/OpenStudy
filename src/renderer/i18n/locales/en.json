@@ -1,0 +1,520 @@
+{
+  "app": {
+    "name": "OpenStudy",
+    "tagline": "A Markdown-first structured question bank and practice system"
+  },
+  "about": {
+    "title": "About",
+    "philosophy": "Philosophy",
+    "philosophyText": "We don't produce knowledge — we turn existing material into a stable, editable, practice-ready Markdown question bank. The focus is structured questions, clear feedback, and a study loop you can actually keep using.",
+    "features": "Core Features",
+    "feat1": "Markdown-first import, editing, and structured question management",
+    "feat2": "AI-assisted cleanup from raw source content into standardized questions",
+    "feat3": "Unified practice, Ask AI, progress tracking, and directory navigation",
+    "feat4": "Automatic wrong book and overview data for review, redo, and reflection",
+    "tech": "Tech Stack",
+    "license": "License",
+    "licenseText": "Released under the MIT License. Powered by Electron + React + DeepSeek."
+  },
+  "nav": {
+    "primary": "Primary navigation",
+    "secondary": "Standards and references",
+    "goLibrary": "Back to Library",
+    "overview": "Overview",
+    "insights": "Insights",
+    "library": "Library",
+    "wrongbook": "Wrong Book",
+    "conversations": "Conversations",
+    "logs": "Logs",
+    "resizeSidebar": "Resize sidebar",
+    "settings": "Settings",
+    "about": "About",
+    "templates": "Templates"
+  },
+  "overview": {
+    "title": "Overview",
+    "subtitle": "Quickly review library progress, study activity, and wrong-answer hotspots in one place.",
+    "metrics": {
+      "documents": "Documents",
+      "questions": "Questions",
+      "attempted": "Attempted",
+      "accuracy": "Accuracy",
+      "wrong": "Wrong now",
+      "activeDocs": "Active docs"
+    },
+    "progress": {
+      "title": "Library Progress",
+      "empty": "No library progress yet.",
+      "emptyHint": "Import and identify a document, then progress will show up here.",
+      "meta": "{{attempted}} / {{total}} attempted · {{wrong}} wrong · {{accuracy}} accuracy"
+    },
+    "wrong": {
+      "title": "Wrong-Answer Hotspots",
+      "empty": "No hotspots right now.",
+      "emptyHint": "Once you start practicing, documents with the most wrong answers will gather here.",
+      "meta": "{{count}} wrong answers right now",
+      "badge": "{{count}} wrong"
+    },
+    "logs": {
+      "title": "Recent Identification Logs",
+      "summary": "{{success}} recent successes, {{failed}} failures.",
+      "empty": "No identification logs yet.",
+      "emptyHint": "After you run identification, recent success and failure audits will appear here.",
+      "failed": "Failed",
+      "success": "Success",
+      "estimated": "Estimated {{count}}",
+      "identified": "Identified {{count}}",
+      "events": "{{count}} events",
+      "details": "Expand preview"
+    }
+  },
+  "logs": {
+    "title": "Identification Logs",
+    "subtitle": "Review success, failure, and audit details for every identification run.",
+    "empty": "No identification logs yet.",
+    "emptyHint": "Once you identify documents, full logs will appear here.",
+    "success": "Success",
+    "failed": "Failed",
+    "estimated": "Estimated {{count}}",
+    "identified": "Identified {{count}}",
+    "events": "{{count}} events",
+    "details": "Expand preview",
+    "delete": "Delete log",
+    "clearAll": "Clear logs",
+    "clearing": "Clearing…",
+    "clearConfirm": "Clear all identification logs?",
+    "summary": {
+      "success": "Success {{count}}",
+      "failed": "Failed {{count}}",
+      "total": "{{count}} total"
+    }
+  },
+  "library": {
+    "title": "Library",
+    "loading": "Loading library…",
+    "import": "Import Document",
+    "importing": "Importing…",
+    "empty": "No documents yet.",
+    "emptyHint": "Import Markdown content, or source material you want to turn into Markdown, to start practicing.",
+    "importEmpty": "Choose File",
+    "importingEmpty": "Choosing file…",
+    "docType": "Type: {{type}}",
+    "questionCount": "Questions: {{count}}",
+    "importedAt": "Imported {{time}}",
+    "actions": {
+      "identify": "Identify",
+      "identifying": "Identifying…",
+      "edit": "Edit File",
+      "practice": "Practice",
+      "delete": "Delete",
+      "deleting": "Deleting…",
+      "reset": "Reset progress"
+    },
+    "reset": {
+      "confirm": "Reset progress for this document? All attempt history under this document will be cleared."
+    },
+    "stats": {
+      "title": "Statistics",
+      "documentCount": "{{count}} documents",
+      "questionCount": "{{count}} questions",
+      "total": "{{total}} questions",
+      "attempted": "Done {{done}}/{{total}}",
+      "wrongCount": "Wrong {{count}}",
+      "correctCount": "Correct {{count}}",
+      "accuracy": "Accuracy {{pct}}"
+    },
+    "errors": {
+      "noQuestions": "No questions found. Check if the document contains recognizable questions.",
+      "tooLarge": "File too large (over 10MB). Please split the document or reduce content.",
+      "scannedPdf": "This file does not contain usable text yet. Convert it into editable Markdown first."
+    },
+    "toast": {
+      "identified": "Identified {{count}} questions",
+      "imported": "Imported “{{title}}”"
+    },
+    "diagnosis": {
+      "title": "Identification quality",
+      "looksGood": "Looks good",
+      "needsReview": "Review suggested",
+      "estimated": "Estimated {{count}}",
+      "identified": "Identified {{count}}",
+      "coverage": "Coverage {{pct}}",
+      "choice": "Choice {{count}}",
+      "multiple": "Multiple Choice {{count}}",
+      "judge": "True/False {{count}}",
+      "fill": "Fill {{count}}",
+      "short": "Short {{count}}",
+      "missingExplanation": "No explanation {{count}}",
+      "suspicious": "Suspicious {{count}}"
+    },
+    "delete": {
+      "confirm": "Delete this document and all its questions? This cannot be undone.",
+      "scanning": "Scanning…"
+    }
+  },
+  "practice": {
+    "title": "Practice",
+    "loading": "Preparing questions…",
+    "noQuestions": "No questions",
+    "noQuestionsHint": "Return to Library to identify questions, or choose another question range.",
+    "back": "← Back",
+    "filterLabel": "Question range",
+    "filterAll": "All Questions",
+    "filterWrong": "Wrong Only",
+    "progress": "Question progress",
+    "summary": {
+      "answered": "Answered",
+      "remaining": "Remaining",
+      "correct": "Correct",
+      "wrong": "Wrong",
+      "accuracy": "Accuracy"
+    },
+    "types": {
+      "choice": "Multiple Choice",
+      "multiple": "Select All That Apply",
+      "judge": "True / False",
+      "fill": "Fill in the Blank",
+      "short": "Short Answer",
+      "code": "Code Analysis"
+    },
+    "hint": {
+      "enter": "Press Enter to submit",
+      "shiftEnter": "Shift+Enter for new line, Enter to submit"
+    },
+    "placeholder": {
+      "fill": "Enter your answer",
+      "short": "Enter your answer (Shift+Enter for a new line, Enter to submit)"
+    },
+    "buttons": {
+      "prev": "Previous",
+      "submit": "Submit",
+      "submitting": "Submitting…",
+      "next": "Next"
+    },
+    "result": {
+      "correct": "Correct",
+      "wrong": "Wrong",
+      "yourAnswerLabel": "Your answer:",
+      "yourAnswer": "Your answer: {{text}}",
+      "yourAnswerEmpty": "(empty)",
+      "reference": "Reference answer:",
+      "feedback": "Review note:",
+      "explanation": "Explanation:"
+    },
+    "completion": {
+      "title": "Complete!",
+      "correctCount": "Correct {{count}}",
+      "wrongCount": "Wrong {{count}}",
+      "skippedCount": "Skipped {{count}}",
+      "masteredAll": "All wrong questions mastered!",
+      "again": "Practice Again",
+      "redoWrong": "Redo Wrong ({{count}})",
+      "backToLibrary": "Back to Library",
+      "backToWrongbook": "Back to Wrong Book",
+      "wrongListTitle": "Wrong Questions ({{count}})",
+      "docLabel": "Doc #{{id}}"
+    },
+    "redoBanner": "Redo mode: from Wrong Book. Correct answers are automatically removed.",
+    "nav": {
+      "label": "Question Navigator",
+      "progress": "Question {{done}} / {{total}}",
+      "correct": "Correct",
+      "wrong": "Wrong",
+      "unanswered": "Unanswered"
+    },
+    "ask": {
+      "title": "Ask AI",
+      "subtitle": "Ask about this question’s concepts, reasoning, or why you got it wrong",
+      "empty": "You can type your own question or tap a quick prompt below.",
+      "placeholder": "e.g. What concept does this test?",
+      "ask": "Ask",
+      "thinking": "AI is thinking…",
+      "quick": {
+        "knowledge": "What concept is this testing?",
+        "hint": "Don’t give me the answer yet — give me a hint",
+        "options": "How should I tell these options apart?",
+        "whyWrong": "Why did I get this wrong?",
+        "explain": "Explain it step by step",
+        "summary": "Summarize the common trap in this question"
+      }
+    }
+  },
+  "wrongbook": {
+    "title": "Wrong Book",
+    "loading": "Loading wrong book…",
+    "summary": "{{attempted}} attempted · {{wrong}} wrong · {{accuracy}} accuracy",
+    "empty": "No wrong questions.",
+    "emptyHint": "Wrong answers will appear here.",
+    "emptyForDoc": "No wrong questions in this document.",
+    "emptyForDocHint": "Choose another document or switch back to All.",
+    "filterAll": "All ({{count}})",
+    "filterLabel": "Filter by document:",
+    "redo": "Redo",
+    "remove": "Remove",
+    "removeConfirm": "Remove this question from Wrong Book (not delete the question)?",
+    "clearAll": "Clear All",
+    "clearAllConfirm": "Clear entire Wrong Book? All attempt history will be deleted.",
+    "removed": "Removed from Wrong Book",
+    "cleared": "Wrong Book cleared",
+    "clearDoc": "Clear document ({{count}})",
+    "clearDocConfirm": "Clear all {{count}} wrong questions in \"{{title}}\"?",
+    "clearedDoc": "Cleared wrong questions in \"{{title}}\"",
+    "yourAnswerLabel": "Your answer",
+    "referenceLabel": "Reference answer",
+    "yourAnswer": "Your answer: {{text}}",
+    "reference": "Reference: {{text}}",
+    "lastWrong": "Wrong at {{time}}",
+    "docCount": "{{count}} wrong questions",
+    "stats": {
+      "attempted": "Attempted",
+      "wrong": "Wrong now",
+      "docs": "Documents",
+      "accuracy": "Accuracy"
+    }
+  },
+  "models": {
+    "loading": "Loading model settings…",
+    "subtitle": "Manage the language model configuration used by the app",
+    "llm": {
+      "title": "LLM Model",
+      "provider": "Provider",
+      "baseUrl": "Base URL",
+      "modelName": "Model Name",
+      "apiKey": "API Key",
+      "apiKeyHint": "Required for online services, not needed for local Ollama",
+      "showKey": "Show API Key",
+      "hideKey": "Hide API Key",
+      "presets": {
+        "deepseek": "DeepSeek",
+        "openai": "OpenAI",
+        "anthropic": "Anthropic",
+        "gemini": "Google Gemini",
+        "groq": "Groq",
+        "xai": "xAI",
+        "openrouter": "OpenRouter",
+        "ollama": "Ollama"
+      },
+      "save": "Save",
+      "saved": "Saved"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Personalize appearance",
+    "theme": {
+      "title": "Appearance",
+      "subtitle": "Choose light, dark, or follow system",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "Follow System"
+    },
+    "language": {
+      "title": "Language",
+      "subtitle": "UI display language",
+      "zh": "简体中文",
+      "en": "English"
+    },
+    "modelSummary": {
+      "title": "Current configuration"
+    },
+    "model": {
+      "test": "Test model",
+      "testing": "Testing…",
+      "testPassed": "Connection looks good",
+      "testResult": "{{model}} · {{latency}}ms"
+    },
+    "shortcuts": {
+      "title": "Shortcuts",
+      "subtitle": "Customize the keys used most often during practice.",
+      "save": "Save shortcuts",
+      "saved": "Saved",
+      "reset": "Restore defaults",
+      "recording": "Press a shortcut…",
+      "hint": "Click any shortcut, then press a key combo. Press {{cancel}} to cancel.",
+      "actions": {
+        "practiceSubmit": {
+          "title": "Submit answer",
+          "description": "Submit the current answer in practice."
+        },
+        "practiceNext": {
+          "title": "Next question",
+          "description": "Move to the next question after results are shown."
+        },
+        "practicePrev": {
+          "title": "Previous question",
+          "description": "Return to the previous question in practice."
+        },
+        "practiceOptionPrev": {
+          "title": "Previous option",
+          "description": "Switch to the previous option during practice."
+        },
+        "practiceOptionNext": {
+          "title": "Next option",
+          "description": "Switch to the next option during practice."
+        }
+      }
+    }
+  },
+  "insights": {
+    "title": "Insights",
+    "loading": "Analyzing recent study activity…",
+    "empty": "No recent attempts to analyze yet.",
+    "emptyHint": "Answer a few questions first. This page will show trends, and AI suggestions can be generated manually.",
+    "actions": {
+      "reload": "Reload data",
+      "analyze": "Analyze insights",
+      "analyzing": "Analyzing…"
+    },
+    "metrics": {
+      "recentAttempts": "Recent attempts",
+      "recentAccuracy": "Recent accuracy",
+      "streak": "Current streak",
+      "activeDays": "Active days"
+    },
+    "typeBreakdown": {
+      "title": "Performance by type",
+      "meta": "{{total}} attempts · {{correct}} correct · {{accuracy}} accuracy"
+    },
+    "dailyTrend": {
+      "title": "Last 7 days"
+    },
+    "documents": {
+      "title": "Document distribution",
+      "meta": "{{total}} attempts · {{accuracy}} accuracy"
+    },
+    "focus": {
+      "title": "Focus now",
+      "weakestType": "Weakest type",
+      "weakestTypeValue": "{{type}} · {{accuracy}} accuracy",
+      "recentState": "Recent overall state",
+      "recentStateValue": "{{attempts}} recent attempts · {{accuracy}} accuracy",
+      "none": "There is not enough recent data yet."
+    },
+    "ai": {
+      "title": "AI study suggestions",
+      "subtitle": "Use recent practice data to surface clearer next steps.",
+      "summary": "Overall read",
+      "highlights": "What is going well",
+      "risks": "What to watch",
+      "actions": "Suggested next steps",
+      "empty": "No AI insights yet.",
+      "emptyHint": "Use the analyze action above to generate suggestions."
+    }
+  },
+  "editor": {
+    "title": "Edit File",
+    "loading": "Loading questions…",
+    "empty": "This document has no questions yet.",
+    "emptyHint": "Go to Library to identify questions, or add new ones",
+    "back": "← Back",
+    "leaveConfirm": "You have unsaved question changes. Return to Library anyway?",
+    "saveAll": "Save All",
+    "dirtyCount": "{{count}} unsaved",
+    "shortcutHint": "{{saveCurrent}} to save current, {{saveAll}} to save all",
+    "noChanges": "No changes to save",
+    "progress": "Question {{current}} / {{total}}",
+    "untitledQuestion": "Untitled question",
+    "fields": {
+      "type": "Type",
+      "stem": "Question",
+      "options": "Options (one per line, suggest starting with A./B.)",
+      "answer": "Answer",
+      "explanation": "Explanation (optional)"
+    },
+    "buttons": {
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Saved",
+      "addOption": "Add option",
+      "remove": "Remove option"
+    },
+    "status": {
+      "idle": "Unchanged",
+      "dirty": "Unsaved",
+      "saving": "Saving",
+      "saved": "Saved"
+    },
+    "nav": {
+      "title": "Question directory",
+      "saved": "Saved",
+      "dirty": "Unsaved",
+      "idle": "Other",
+      "jumpTo": "Jump to question"
+    },
+    "types": {
+      "choice": "Multiple Choice",
+      "multiple": "Select All That Apply",
+      "judge": "True / False",
+      "fill": "Fill in the Blank",
+      "short": "Short Answer"
+    }
+  },
+  "markdownEditor": {
+    "title": "Edit Source",
+    "loading": "Loading source…",
+    "edit": "Edit",
+    "preview": "Preview",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "saveAndBack": "Back",
+    "leaveConfirm": "You have unsaved content. Return to Library anyway?",
+    "stats": "{{lines}} lines · {{chars}} characters",
+    "unsaved": "Unsaved",
+    "fromDb": "Edited",
+    "fromFile": "Original",
+    "resetFromFile": "Reset from original",
+    "resetConfirm": "Reset from original? Your edits will be lost.",
+    "precheck": {
+      "title": "Question precheck",
+      "looksGood": "Structure looks good",
+      "needsReview": "Fix suggested",
+      "estimatedQuestions": "Estimated {{count}} questions",
+      "answerLines": "Answer lines {{count}}",
+      "optionLines": "Option lines {{count}}",
+      "explanations": "Explanation lines {{count}}",
+      "noIssues": "No obvious structure issues found. You can continue identifying questions."
+    },
+    "hint": "Tip: After editing, click \"Identify\" and it will use your edited version."
+  },
+  "common": {
+    "back": "Back",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "retry": "Retry",
+    "loading": "Loading…",
+    "saving": "Saving…",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info",
+    "language": "Language",
+    "theme": "Appearance"
+  },
+  "conversations": {
+    "title": "Conversations",
+    "empty": "No conversation history yet.",
+    "emptyHint": "Once you ask AI during practice, each question's chat history will appear here.",
+    "docFallback": "Document #{{id}}",
+    "docCount": "{{count}} conversations",
+    "open": "Resume chat",
+    "delete": "Delete record",
+    "clearAll": "Clear history",
+    "clearConfirm": "Clear all conversation history?"
+  },
+  "templates": {
+    "title": "Question Templates",
+    "subtitle": "Show one Markdown standard based on the current UI language, and apply it throughout the PDF Word TXT to Markdown pipeline.",
+    "export": "Export All Templates",
+    "copy": "Copy Template",
+    "copied": "Copied to clipboard",
+    "copyFailed": "Copy failed",
+    "exported": "Exported successfully",
+    "standardTitle": "Markdown Standard Guide",
+    "copyAll": "Copy All Templates",
+    "copiedAll": "All templates copied to clipboard"
+  }
+}

@@ -1,0 +1,520 @@
+{
+  "app": {
+    "name": "OpenStudy",
+    "tagline": "Markdown-first 结构化题库与做题系统"
+  },
+  "about": {
+    "title": "关于",
+    "philosophy": "产品理念",
+    "philosophyText": "不生产知识，只把已有内容整理成稳定、可编辑、可练习的 Markdown 题库。围绕结构化题目、练习反馈和错题回顾，把学习闭环真正跑起来。",
+    "features": "核心功能",
+    "feat1": "Markdown-first 题库导入、编辑与结构化管理",
+    "feat2": "AI 辅助把原始内容整理成标准化题目",
+    "feat3": "统一的做题、问 AI、进度追踪与目录导航体验",
+    "feat4": "自动错题本与数据概览，支持回看、重做与持续复盘",
+    "tech": "技术栈",
+    "license": "许可证",
+    "licenseText": "本项目以 MIT 协议开源。Powered by Electron + React + DeepSeek。"
+  },
+  "nav": {
+    "primary": "主要导航",
+    "secondary": "标准与参考",
+    "goLibrary": "返回题库",
+    "overview": "概览",
+    "insights": "洞察",
+    "library": "题库",
+    "wrongbook": "错题本",
+    "conversations": "对话记录",
+    "logs": "日志",
+    "resizeSidebar": "调整侧边栏宽度",
+    "settings": "设置",
+    "about": "关于",
+    "templates": "标准"
+  },
+  "overview": {
+    "title": "数据概览",
+    "subtitle": "从一个页面快速查看题库进度、做题情况和错题热点。",
+    "metrics": {
+      "documents": "文档数",
+      "questions": "题目数",
+      "attempted": "累计已做",
+      "accuracy": "总体正确率",
+      "wrong": "当前错题",
+      "activeDocs": "有练习记录的文档"
+    },
+    "progress": {
+      "title": "题库进度",
+      "empty": "还没有可展示的题库进度。",
+      "emptyHint": "导入文档并识别题目后，这里会显示各文档的练习进度。",
+      "meta": "已做 {{attempted}} / {{total}} · 错题 {{wrong}} · 正确率 {{accuracy}}"
+    },
+    "wrong": {
+      "title": "错题热点",
+      "empty": "当前没有错题热点。",
+      "emptyHint": "开始做题后，这里会自动聚合错题较多的文档。",
+      "meta": "当前累计 {{count}} 道错题",
+      "badge": "{{count}} 道"
+    },
+    "logs": {
+      "title": "最近识题日志",
+      "summary": "最近日志中成功 {{success}} 次，失败 {{failed}} 次。",
+      "empty": "还没有识题日志。",
+      "emptyHint": "开始识别后，这里会保留最近的成功 / 失败审计记录。",
+      "failed": "失败",
+      "success": "成功",
+      "estimated": "预检 {{count}} 题",
+      "identified": "识别 {{count}} 题",
+      "events": "事件 {{count}} 条",
+      "details": "展开预览"
+    }
+  },
+  "logs": {
+    "title": "识别日志",
+    "subtitle": "集中查看每次题目识别的成功、失败和审计信息。",
+    "empty": "还没有识别日志。",
+    "emptyHint": "开始识别文档后，这里会保留完整日志。",
+    "success": "成功",
+    "failed": "失败",
+    "estimated": "预检 {{count}} 题",
+    "identified": "识别 {{count}} 题",
+    "events": "事件 {{count}} 条",
+    "details": "展开预览",
+    "delete": "删除日志",
+    "clearAll": "清空日志",
+    "clearing": "清空中…",
+    "clearConfirm": "确定清空所有识别日志吗？",
+    "summary": {
+      "success": "成功 {{count}}",
+      "failed": "失败 {{count}}",
+      "total": "共 {{count}} 条"
+    }
+  },
+  "library": {
+    "title": "题库",
+    "loading": "正在加载题库…",
+    "import": "导入文档",
+    "importing": "导入中…",
+    "empty": "还没有文档。",
+    "emptyHint": "导入 Markdown 或可整理为 Markdown 的题库内容后即可开始练习。",
+    "importEmpty": "选择文件",
+    "importingEmpty": "正在选择文件…",
+    "docType": "类型：{{type}}",
+    "questionCount": "题目数：{{count}}",
+    "importedAt": "导入于 {{time}}",
+    "actions": {
+      "identify": "识别题目",
+      "identifying": "识别中…",
+      "edit": "编辑文件",
+      "practice": "做题",
+      "delete": "删除",
+      "deleting": "删除中…",
+      "reset": "重置进度"
+    },
+    "reset": {
+      "confirm": "重置该文档的做题进度？会清除该文档下所有 attempt 历史。"
+    },
+    "stats": {
+      "title": "统计",
+      "documentCount": "{{count}} 个文档",
+      "questionCount": "{{count}} 道题",
+      "total": "{{total}} 道题",
+      "attempted": "已做 {{done}}/{{total}}",
+      "wrongCount": "错 {{count}}",
+      "correctCount": "对 {{count}}",
+      "accuracy": "正确率 {{pct}}"
+    },
+    "errors": {
+      "noQuestions": "识别完成但未找到题目。请检查文档是否包含可识别的题目内容。",
+      "tooLarge": "文件过大（超过 10MB）。请拆分文档或减少内容。",
+      "scannedPdf": "当前文件缺少可识别文本，请先整理为 Markdown 后再继续。"
+    },
+    "toast": {
+      "identified": "识别完成：{{count}} 道题",
+      "imported": "已导入《{{title}}》"
+    },
+    "diagnosis": {
+      "title": "识题质量诊断",
+      "looksGood": "结果正常",
+      "needsReview": "建议复查",
+      "estimated": "预检约 {{count}} 题",
+      "identified": "识别出 {{count}} 题",
+      "coverage": "覆盖率 {{pct}}",
+      "choice": "选择 {{count}}",
+      "multiple": "多选 {{count}}",
+      "judge": "判断 {{count}}",
+      "fill": "填空 {{count}}",
+      "short": "简答 {{count}}",
+      "missingExplanation": "无解析 {{count}}",
+      "suspicious": "可疑题 {{count}}"
+    },
+    "delete": {
+      "confirm": "确定删除此文档及其题目？此操作不可恢复。",
+      "scanning": "扫描中…"
+    }
+  },
+  "practice": {
+    "title": "做题",
+    "loading": "正在准备题目…",
+    "noQuestions": "没有题目",
+    "noQuestionsHint": "请先返回题库识别题目，或更换题目范围。",
+    "back": "← 返回",
+    "filterLabel": "题目范围",
+    "filterAll": "全部题目",
+    "filterWrong": "只做错题",
+    "progress": "题目进度",
+    "summary": {
+      "answered": "已作答",
+      "remaining": "待完成",
+      "correct": "答对",
+      "wrong": "答错",
+      "accuracy": "正确率"
+    },
+    "types": {
+      "choice": "选择题",
+      "multiple": "多选题",
+      "judge": "判断题",
+      "fill": "填空题",
+      "short": "简答题",
+      "code": "代码题"
+    },
+    "hint": {
+      "enter": "回车提交",
+      "shiftEnter": "Shift+Enter 换行，Enter 提交"
+    },
+    "placeholder": {
+      "fill": "输入答案",
+      "short": "输入答案（Shift+Enter 换行，Enter 提交）"
+    },
+    "buttons": {
+      "prev": "上一题",
+      "submit": "提交",
+      "submitting": "提交中…",
+      "next": "下一题"
+    },
+    "result": {
+      "correct": "正确",
+      "wrong": "错误",
+      "yourAnswerLabel": "你的答案：",
+      "yourAnswer": "你的答案：{{text}}",
+      "yourAnswerEmpty": "（未作答）",
+      "reference": "参考答案：",
+      "feedback": "判定说明：",
+      "explanation": "解析："
+    },
+    "completion": {
+      "title": "完成！",
+      "correctCount": "正确 {{count}}",
+      "wrongCount": "错误 {{count}}",
+      "skippedCount": "跳过 {{count}}",
+      "masteredAll": "本轮错题已全部掌握！",
+      "again": "再来一轮",
+      "redoWrong": "重做错题（{{count}}）",
+      "backToLibrary": "返回题库",
+      "backToWrongbook": "返回错题本",
+      "wrongListTitle": "本轮错题（{{count}}）",
+      "docLabel": "文档 #{{id}}"
+    },
+    "redoBanner": "重做模式：来自错题本。答对的题会自动从错题本移除。",
+    "nav": {
+      "label": "题目导航",
+      "progress": "第 {{done}} / {{total}} 题",
+      "correct": "已答对",
+      "wrong": "已答错",
+      "unanswered": "未作答"
+    },
+    "ask": {
+      "title": "问 AI",
+      "subtitle": "围绕当前题目提问，帮你理解考点、思路和错因",
+      "empty": "你可以直接提问，也可以点下面的快捷问题。",
+      "placeholder": "例如：这道题考察什么知识点？",
+      "ask": "提问",
+      "thinking": "AI 正在思考…",
+      "quick": {
+        "knowledge": "这题考什么知识点？",
+        "hint": "先别直接给答案，给我一点提示",
+        "options": "这几个选项应该怎么区分？",
+        "whyWrong": "我为什么会做错？",
+        "explain": "请一步一步给我讲解",
+        "summary": "帮我总结这题的易错点"
+      }
+    }
+  },
+  "wrongbook": {
+    "title": "错题本",
+    "loading": "正在加载错题本…",
+    "summary": "已做 {{attempted}} 题 · 错题 {{wrong}} 题 · 正确率 {{accuracy}}",
+    "empty": "还没有错题。",
+    "emptyHint": "做错题后会出现在这里。",
+    "emptyForDoc": "此文档下没有错题。",
+    "emptyForDocHint": "可以切换到其他文档或选择“全部”。",
+    "filterAll": "全部（{{count}}）",
+    "filterLabel": "按文档过滤：",
+    "redo": "重做",
+    "remove": "移除",
+    "removeConfirm": "从错题本移除此题（不删除题目本身）？",
+    "clearAll": "清空错题本",
+    "clearAllConfirm": "清空整个错题本？所有 attempt 历史会被删除。",
+    "removed": "已从错题本移除",
+    "cleared": "错题本已清空",
+    "clearDoc": "清空本文档错题（{{count}}）",
+    "clearDocConfirm": "清空「{{title}}」下 {{count}} 道错题？",
+    "clearedDoc": "「{{title}}」错题已清空",
+    "yourAnswerLabel": "你的答案",
+    "referenceLabel": "正确答案",
+    "yourAnswer": "你的答案：{{text}}",
+    "reference": "正确答案：{{text}}",
+    "lastWrong": "错于 {{time}}",
+    "docCount": "{{count}} 道错题",
+    "stats": {
+      "attempted": "累计已做",
+      "wrong": "当前错题",
+      "docs": "涉及文档",
+      "accuracy": "当前正确率"
+    }
+  },
+  "models": {
+    "loading": "正在加载模型配置…",
+    "subtitle": "管理当前使用的语言模型配置",
+    "llm": {
+      "title": "LLM 模型",
+      "provider": "服务方",
+      "baseUrl": "Base URL",
+      "modelName": "模型名称",
+      "apiKey": "API Key",
+      "apiKeyHint": "在线服务必填，本地 Ollama 不需要",
+      "showKey": "显示 API Key",
+      "hideKey": "隐藏 API Key",
+      "presets": {
+        "deepseek": "DeepSeek",
+        "openai": "OpenAI",
+        "anthropic": "Anthropic",
+        "gemini": "Google Gemini",
+        "groq": "Groq",
+        "xai": "xAI",
+        "openrouter": "OpenRouter",
+        "ollama": "Ollama"
+      },
+      "save": "保存",
+      "saved": "已保存"
+    }
+  },
+  "settings": {
+    "title": "设置",
+    "subtitle": "个性化应用外观",
+    "theme": {
+      "title": "外观",
+      "subtitle": "选择浅色、深色或跟随系统",
+      "light": "浅色",
+      "dark": "深色",
+      "system": "跟随系统"
+    },
+    "language": {
+      "title": "语言",
+      "subtitle": "界面显示语言",
+      "zh": "简体中文",
+      "en": "English"
+    },
+    "modelSummary": {
+      "title": "当前配置"
+    },
+    "model": {
+      "test": "测试模型",
+      "testing": "测试中…",
+      "testPassed": "连接正常",
+      "testResult": "{{model}} · {{latency}}ms"
+    },
+    "shortcuts": {
+      "title": "快捷键",
+      "subtitle": "自定义做题时常用的操作键位",
+      "save": "保存快捷键",
+      "saved": "已保存",
+      "reset": "恢复默认",
+      "recording": "按下组合键…",
+      "hint": "点击任一快捷键后直接按键录制，按 {{cancel}} 取消。",
+      "actions": {
+        "practiceSubmit": {
+          "title": "提交答案",
+          "description": "做题页提交当前作答。"
+        },
+        "practiceNext": {
+          "title": "下一题",
+          "description": "做题结果展开后跳到下一题。"
+        },
+        "practicePrev": {
+          "title": "上一题",
+          "description": "做题页返回上一题。"
+        },
+        "practiceOptionPrev": {
+          "title": "上一选项",
+          "description": "做题页用快捷键切换到上一个选项。"
+        },
+        "practiceOptionNext": {
+          "title": "下一选项",
+          "description": "做题页用快捷键切换到下一个选项。"
+        }
+      }
+    }
+  },
+  "insights": {
+    "title": "洞察",
+    "loading": "正在分析最近做题记录…",
+    "empty": "还没有可分析的做题记录。",
+    "emptyHint": "先做几道题，这里会汇总数据；AI 学习建议可手动生成。",
+    "actions": {
+      "reload": "刷新数据",
+      "analyze": "分析洞察",
+      "analyzing": "分析中…"
+    },
+    "metrics": {
+      "recentAttempts": "最近做题",
+      "recentAccuracy": "最近正确率",
+      "streak": "连续答对",
+      "activeDays": "活跃天数"
+    },
+    "typeBreakdown": {
+      "title": "题型表现",
+      "meta": "共 {{total}} 题 · 答对 {{correct}} 题 · 正确率 {{accuracy}}"
+    },
+    "dailyTrend": {
+      "title": "近 7 天练习"
+    },
+    "documents": {
+      "title": "文档分布",
+      "meta": "共 {{total}} 次练习 · 正确率 {{accuracy}}"
+    },
+    "focus": {
+      "title": "重点关注",
+      "weakestType": "当前薄弱题型",
+      "weakestTypeValue": "{{type}} · 正确率 {{accuracy}}",
+      "recentState": "最近整体状态",
+      "recentStateValue": "最近 {{attempts}} 次作答，整体正确率 {{accuracy}}",
+      "none": "最近记录还不足以判断。"
+    },
+    "ai": {
+      "title": "AI 学习建议",
+      "subtitle": "结合最近做题记录，给出更具体的复盘方向。",
+      "summary": "总体判断",
+      "highlights": "做得好的地方",
+      "risks": "需要注意的问题",
+      "actions": "下一步建议",
+      "empty": "还没有 AI 洞察。",
+      "emptyHint": "点击右上角分析按钮后，这里会生成建议。"
+    }
+  },
+  "editor": {
+    "title": "编辑文件",
+    "loading": "正在加载题目…",
+    "empty": "此文档还没有题目。",
+    "emptyHint": "先到 Library 识别题目，或新建题目",
+    "back": "← 返回",
+    "leaveConfirm": "还有未保存的题目修改，确定返回题库吗？",
+    "saveAll": "全部保存",
+    "dirtyCount": "{{count}} 处待保存",
+    "shortcutHint": "{{saveCurrent}} 保存当前题，{{saveAll}} 全部保存",
+    "noChanges": "没有需要保存的修改",
+    "progress": "第 {{current}} / {{total}} 题",
+    "untitledQuestion": "未命名题目",
+    "fields": {
+      "type": "类型",
+      "stem": "题干",
+      "options": "选项（每行一个，建议以 A./B. 开头）",
+      "answer": "答案",
+      "explanation": "解析（可选）"
+    },
+    "buttons": {
+      "save": "保存",
+      "saving": "保存中…",
+      "saved": "已保存",
+      "addOption": "添加选项",
+      "remove": "删除选项"
+    },
+    "status": {
+      "idle": "未修改",
+      "dirty": "待保存",
+      "saving": "保存中",
+      "saved": "已保存"
+    },
+    "nav": {
+      "title": "题目目录",
+      "saved": "已保存",
+      "dirty": "待保存",
+      "idle": "其余",
+      "jumpTo": "跳转到题目"
+    },
+    "types": {
+      "choice": "选择题",
+      "multiple": "多选题",
+      "judge": "判断题",
+      "fill": "填空题",
+      "short": "简答题"
+    }
+  },
+  "markdownEditor": {
+    "title": "编辑原文件",
+    "loading": "正在加载原文件…",
+    "edit": "编辑",
+    "preview": "预览",
+    "save": "保存",
+    "saving": "保存中…",
+    "saved": "已保存",
+    "saveAndBack": "返回",
+    "leaveConfirm": "还有未保存的内容，确定返回题库吗？",
+    "stats": "{{lines}} 行 · {{chars}} 字符",
+    "unsaved": "未保存",
+    "fromDb": "已编辑",
+    "fromFile": "原始文件",
+    "resetFromFile": "从原始文件重置",
+    "resetConfirm": "确认从原始文件重新生成？已编辑的内容会丢失。",
+    "precheck": {
+      "title": "题目预检",
+      "looksGood": "结构正常",
+      "needsReview": "建议先修复",
+      "estimatedQuestions": "预估题目 {{count}}",
+      "answerLines": "答案行 {{count}}",
+      "optionLines": "选项行 {{count}}",
+      "explanations": "解析行 {{count}}",
+      "noIssues": "暂未发现明显结构问题，可以直接继续识别。"
+    },
+    "hint": "💡 提示：编辑后点「识别题目」会用你编辑的版本。"
+  },
+  "common": {
+    "back": "返回",
+    "confirm": "确认",
+    "cancel": "取消",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "close": "关闭",
+    "retry": "重试",
+    "loading": "加载中…",
+    "saving": "保存中…",
+    "error": "错误",
+    "warning": "警告",
+    "info": "提示",
+    "language": "语言",
+    "theme": "外观"
+  },
+  "conversations": {
+    "title": "对话记录",
+    "empty": "还没有对话记录。",
+    "emptyHint": "在做题页向 AI 提问后，这里会保留每道题的历史对话。",
+    "docFallback": "文档 #{{id}}",
+    "docCount": "{{count}} 段对话",
+    "open": "继续对话",
+    "delete": "删除记录",
+    "clearAll": "清空记录",
+    "clearConfirm": "确定清空所有对话记录吗？"
+  },
+  "templates": {
+    "title": "标准题目格式",
+    "subtitle": "根据当前界面语言展示唯一一套 Markdown 标准, 并贯穿 PDF Word TXT 到 Markdown 的识别链路.",
+    "export": "一键导出所有模板",
+    "copy": "复制模板",
+    "copied": "已复制到剪贴板",
+    "copyFailed": "复制失败",
+    "exported": "导出成功",
+    "standardTitle": "Markdown 标准说明",
+    "copyAll": "复制所有模板",
+    "copiedAll": "所有模板已复制到剪贴板"
+  }
+}

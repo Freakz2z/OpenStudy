@@ -1,0 +1,49 @@
+name: Feature Request
+description: Propose a new feature or meaningful workflow improvement.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing an idea.
+
+        欢迎提需求。最有帮助的方式，是把“学习场景”和“为什么值得做”讲清楚。
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the learning or product problem first.
+      placeholder: I want to...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What would you like OpenStudy to do?
+      placeholder: The app should...
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Current workaround or alternatives
+      description: How are you solving this today?
+  - type: checkboxes
+    id: impact
+    attributes:
+      label: Impact area
+      options:
+        - label: Document import / parsing
+        - label: Question structuring / formatting
+        - label: Practice flow
+        - label: Ask AI
+        - label: Insights / wrong-book / review
+        - label: Packaging / installer / platform support
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Add mockups, screenshots, or constraints if relevant.
