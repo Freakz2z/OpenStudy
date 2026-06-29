@@ -129,14 +129,14 @@ export async function installApiMock(
         getAppMeta: () =>
           Promise.resolve({
             name: 'OpenStudy',
-            version: '0.2.0',
+            version: '0.2.1',
             repositoryUrl: 'https://github.com/Freakz2z/OpenStudy',
             releasesUrl: 'https://github.com/Freakz2z/OpenStudy/releases',
           }),
         checkLatestRelease: () =>
           Promise.resolve({
-            currentVersion: '0.2.0',
-            latestVersion: '0.2.0',
+            currentVersion: '0.2.1',
+            latestVersion: '0.2.1',
             upToDate: true,
             checkedAt: Date.now(),
             releaseUrl: 'https://github.com/Freakz2z/OpenStudy/releases/latest',

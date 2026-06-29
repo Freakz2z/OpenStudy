@@ -106,6 +106,42 @@ describe('OpenAIProvider', () => {
     expect(r[0].type).toBe('choice');
     expect(r[0].answer).toBe('B');
   });
+
+  it('can ask the model for OpenStudy standard markdown instead of JSON', async () => {
+    let captured: { url: string; init: RequestInit } | null = null;
+    globalThis.fetch = vi.fn(async (url, init) => {
+      captured = { url: url as string, init: init as RequestInit };
+      return {
+        ok: true,
+        status: 200,
+        text: async () => '',
+        json: async () => ({
+          choices: [{ message: { content: '## 单选题\n\n### 1. 示例题\nType: choice\nAnswer: A' } }],
+        }),
+      } as Response;
+    }) as unknown as typeof fetch;
+
+    const p = new OpenAIProvider({
+      provider: 'openai',
+      baseUrl: 'https://api.openai.com/v1',
+      apiKey: 'sk-test',
+      model: 'gpt-4o-mini',
+    });
+    const markdown = await p.identifyQuestionMarkdown!({
+      text: '<!-- QUESTION_ID:q1 -->\n1. 示例题\nA. 甲\nB. 乙\n答案：A',
+      preserveSourceId: true,
+      maxQuestions: 1,
+      standardLang: 'zh',
+    });
+
+    expect(markdown).toContain('## 单选题');
+    const body = JSON.parse(captured!.init.body as string);
+    expect(body.response_format).toBeUndefined();
+    expect(body.messages[0].content).toContain('Markdown 标准整理器');
+    const userMsg = body.messages[1].content as Array<{ type: string; text?: string }>;
+    expect(userMsg[0].text).toContain('QUESTION_ID');
+    expect(userMsg[0].text).toContain('最多整理 1 道题');
+  });
 });
 
 describe('OllamaProvider', () => {
@@ -157,6 +193,28 @@ describe('OllamaProvider', () => {
       images: [{ base64: 'AAAA', mime: 'image/png', page: 1 }],
     });
     expect(captured!.body.messages[1].images).toEqual(['AAAA']);
+  });
+
+  it('requests markdown mode without forcing JSON format', async () => {
+    let captured: { body: any } | null = null;
+    globalThis.fetch = vi.fn(async (_url, init) => {
+      captured = { body: JSON.parse(init!.body as string) };
+      return {
+        ok: true,
+        status: 200,
+        text: async () => '',
+        json: async () => ({ message: { content: '## 简答题\n\n### 1. 示例\nType: short\nAnswer: ok' } }),
+      } as Response;
+    }) as unknown as typeof fetch;
+
+    const p = new OllamaProvider({
+      provider: 'ollama',
+      baseUrl: 'http://127.0.0.1:11434',
+      model: 'qwen2.5',
+    });
+    await p.identifyQuestionMarkdown!({ text: '示例文本', standardLang: 'zh' });
+    expect(captured!.body.format).toBeUndefined();
+    expect(captured!.body.messages[0].content).toContain('Markdown 标准整理器');
   });
 });
 

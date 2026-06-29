@@ -1,6 +1,8 @@
 import type { LLMInput, LLMProvider } from './index.js';
 import {
+  STANDARD_MARKDOWN_SYSTEM_PROMPT,
   SYSTEM_PROMPT,
+  buildMarkdownUserPrompt,
   buildUserPrompt,
   parseAndValidate,
 } from './index.js';
@@ -45,6 +47,33 @@ export class OpenAICompatProvider implements LLMProvider {
 
     return parseAndValidate(lastErr);
   }
+
+  async identifyQuestionMarkdown(
+    input: Parameters<NonNullable<LLMProvider['identifyQuestionMarkdown']>>[0],
+  ): Promise<string> {
+    const baseUrl = (this.cfg.baseUrl ?? '').replace(/\/$/, '');
+    const model = this.cfg.model;
+    const apiKey = this.cfg.apiKey;
+    if (!baseUrl) throw new Error('OpenAI 兼容协议需要 baseUrl');
+    if (!apiKey) throw new Error('OpenAI 兼容协议需要 apiKey');
+    if (!model) throw new Error('未指定模型');
+
+    const userContent: Array<
+      | { type: 'text'; text: string }
+      | { type: 'image_url'; image_url: { url: string } }
+    > = [];
+    userContent.push({ type: 'text', text: buildMarkdownUserPrompt(input) });
+    if (input.images) {
+      for (const img of input.images) {
+        userContent.push({
+          type: 'image_url',
+          image_url: { url: `data:${img.mime};base64,${img.base64}` },
+        });
+      }
+    }
+
+    return callTextOnce(baseUrl, model, apiKey, 8000, STANDARD_MARKDOWN_SYSTEM_PROMPT, userContent);
+  }
 }
 
 async function callOnce(
@@ -84,6 +113,44 @@ async function callOnce(
   if (!content || !content.trim()) {
     throw new Error('EMPTY_CONTENT');
   }
+  return content;
+}
+
+async function callTextOnce(
+  baseUrl: string,
+  model: string,
+  apiKey: string,
+  maxTokens: number,
+  systemPrompt: string,
+  userContent: Array<
+    | { type: 'text'; text: string }
+    | { type: 'image_url'; image_url: { url: string } }
+  >,
+): Promise<string> {
+  const resp = await fetch(`${baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: maxTokens,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userContent },
+      ],
+    }),
+  });
+  if (!resp.ok) {
+    const t = await resp.text();
+    throw new Error(`LLM 调用失败: ${resp.status} ${t}`);
+  }
+  const data = (await resp.json()) as {
+    choices?: Array<{ message?: { content?: string | null } }>;
+  };
+  const content = data.choices?.[0]?.message?.content?.trim();
+  if (!content) throw new Error('LLM 未返回标准 Markdown 内容');
   return content;
 }
 

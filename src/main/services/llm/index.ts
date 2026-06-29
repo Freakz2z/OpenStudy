@@ -11,6 +11,7 @@ import type {
   StudyInsightsResult,
   StudyChatMessage,
 } from '../../../shared/types.js';
+import type { MarkdownStandardLanguage } from '../../../shared/markdown-standard.js';
 import {
   isOptionQuestion,
   normalizeChoiceAnswer,
@@ -82,8 +83,15 @@ export interface LLMInput {
   hint?: string;
 }
 
+export interface LLMMarkdownInput extends LLMInput {
+  standardLang?: MarkdownStandardLanguage;
+  maxQuestions?: number;
+  preserveSourceId?: boolean;
+}
+
 export interface LLMProvider {
   identifyQuestions(input: LLMInput): Promise<ExtractedQuestion[]>;
+  identifyQuestionMarkdown?(input: LLMMarkdownInput): Promise<string>;
 }
 
 const STUDY_CHAT_SYSTEM_PROMPT = `你是 OpenStudy 的做题助教。
@@ -248,11 +256,70 @@ json 顶层必须是对象，含 questions 数组。
 13. 【题数预算】本次调用最多返回 12 道题。如果提示中要求更少，请以提示为准，但仍然需要保证每题完整。
 14. 【完整度】每道题都必须完整：必须有 stem、answer、type；缺字段视为不完整，禁止返回不完整的题目。`;
 
+export const STANDARD_MARKDOWN_SYSTEM_PROMPT = `你是 OpenStudy 的 Markdown 标准整理器。
+
+任务：把输入材料整理成接近 OpenStudy 标准的 Markdown。注意，你不是直接输出 JSON，而是先输出标准化 Markdown，后续系统会再把它结构化成题目。
+
+【必须遵守】
+1. 只能输出 Markdown 正文，不要输出解释、前言、后缀，也不要包裹在代码块里。
+2. 每道题必须使用以下结构中的可用部分：
+   - 可选章节标题：## 单选题 / ## 多选题 / ## 判断题 / ## 填空题 / ## 简答题 / ## 代码题
+   - 题目标题：### 1. ...
+   - 选项：- A. ... / - B. ...
+   - 字段：Type: ... / Answer: ... / Explanation: ...
+3. Type 只能是：choice / multiple / judge / fill / short / code。
+4. 如果输入里存在 <!-- QUESTION_ID:qN -->，必须原样保留，并且每个 QUESTION_ID 只对应一道题。
+5. 判断题请整理为：
+   - A. 正确
+   - B. 错误
+   Answer: A 或 B
+6. 选择题答案必须写字母；多选题答案写排序后的字母串；填空/简答/代码题保留文本答案。
+7. Type 字段必须放在题目内容与 Answer 之间；不要把 Type 写到代码块里。
+8. 不要保留目录、页眉页脚、答案速查表等非题目内容。
+9. 保留原语言；如果原文是中文，就输出中文题干与说明；如果原文是英文，就输出英文。
+10. 如果没有可识别题目，返回空字符串。`;
+
 export function buildUserPrompt(input: LLMInput): string {
   if (input.images && input.images.length) {
     return `从以下 ${input.images.length} 页图片中提取题目。${input.hint ? `主题：${input.hint}` : ''}`;
   }
   return `从以下学习材料中提取题目。${input.hint ? `主题：${input.hint}` : ''}\n\n${input.text ?? ''}`;
+}
+
+export function buildMarkdownUserPrompt(input: LLMMarkdownInput): string {
+  const languageHint =
+    input.standardLang === 'en'
+      ? 'Use English section titles and field content when the source is English.'
+      : '优先输出中文题型标题；字段名统一使用 Type / Answer / Explanation。';
+  const preserveHint = input.preserveSourceId
+    ? '如果材料里出现 QUESTION_ID 注释，必须逐题原样保留。'
+    : '如果原文没有 QUESTION_ID 注释，不要凭空补造。';
+  const budgetHint = input.maxQuestions
+    ? `本次最多整理 ${input.maxQuestions} 道题，但每道题都必须完整。`
+    : '请整理出当前材料中的全部完整题目。';
+
+  if (input.images && input.images.length) {
+    return [
+      `请把以下 ${input.images.length} 页图片整理为 OpenStudy 标准 Markdown。`,
+      input.hint ? `主题：${input.hint}` : '',
+      languageHint,
+      preserveHint,
+      budgetHint,
+    ]
+      .filter(Boolean)
+      .join('\n\n');
+  }
+
+  return [
+    '请把以下学习材料整理为 OpenStudy 标准 Markdown。',
+    input.hint ? `主题：${input.hint}` : '',
+    languageHint,
+    preserveHint,
+    budgetHint,
+    input.text ?? '',
+  ]
+    .filter(Boolean)
+    .join('\n\n');
 }
 
 export function parseAndValidate(raw: string): ExtractedQuestion[] {

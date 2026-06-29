@@ -15,6 +15,7 @@ export interface SourceQuestionBlock {
   number: string | null;
   heading: string | null;
   page: number | null;
+  sourceId: string | null;
   text: string;
 }
 
@@ -24,7 +25,8 @@ export interface StructuredQuestionDocument {
 }
 
 const PAGE_MARKER_RE = /^\s*\[\[(?:PDF\s+)?PAGE\s+(\d+)\]\]\s*$/i;
-const QUESTION_META_RE = /^\s*<!--\s*QUESTION_ID:[^>]*-->\s*$/i;
+const QUESTION_META_RE =
+  /^\s*<!--\s*QUESTION_ID:([A-Za-z0-9_-]+)(?:\s+PAGE:(\d+))?[^>]*-->\s*$/i;
 const SECTION_KIND_RE =
   /(代码\s*(?:题|解析|分析)|单选题|单项选择题|多选题|多项选择题|选择题|判断题|是非题|填空题|简答题|问答题|论述题|code\s*(?:analysis|question)|single\s+choice|multiple\s+choice|multiple\s+select|true\s*\/\s*false|true\s+or\s+false|fill\s+in\s+the\s+blank|fill\s+in\s+the\s+blanks|short\s+answer|essay)/i;
 const SECTION_LINE_RE =
@@ -109,11 +111,13 @@ export function segmentQuestionDocument(text: string): StructuredQuestionDocumen
         number: string;
         heading: string | null;
         page: number | null;
+        sourceId: string | null;
         lines: string[];
       }
     | null = null;
   let ignoreRemainder = false;
   let awaitingMetadataQuestion = false;
+  let pendingSourceId: string | null = null;
 
   const flush = () => {
     if (!current) return;
@@ -124,6 +128,7 @@ export function segmentQuestionDocument(text: string): StructuredQuestionDocumen
         number: current.number || null,
         heading: current.heading,
         page: current.page,
+        sourceId: current.sourceId,
         text: body,
       });
     }
@@ -132,10 +137,11 @@ export function segmentQuestionDocument(text: string): StructuredQuestionDocumen
 
   for (const rawLine of lines) {
     const line = cleanLine(rawLine);
-    if (QUESTION_META_RE.test(line)) {
+    const metaMatch = line.match(QUESTION_META_RE);
+    if (metaMatch) {
       flush();
-      const pageMeta = line.match(/\bPAGE:(\d+)/i);
-      if (pageMeta) page = Number(pageMeta[1]);
+      pendingSourceId = metaMatch[1] ?? null;
+      if (metaMatch[2]) page = Number(metaMatch[2]);
       awaitingMetadataQuestion = true;
       continue;
     }
@@ -170,8 +176,10 @@ export function segmentQuestionDocument(text: string): StructuredQuestionDocumen
         number: start?.number ?? '',
         heading,
         page,
+        sourceId: pendingSourceId,
         lines: [start?.rest ?? trimmed.replace(/^#{1,6}\s*/, '')],
       };
+      pendingSourceId = null;
       awaitingMetadataQuestion = false;
       continue;
     }
@@ -188,6 +196,7 @@ export function segmentQuestionDocument(text: string): StructuredQuestionDocumen
         number: start.number,
         heading,
         page,
+        sourceId: null,
         lines: [start.rest],
       };
       continue;
@@ -342,6 +351,7 @@ export function parseStructuredQuestion(
 
   if (type === 'judge') {
     return {
+      source_id: block.sourceId ?? undefined,
       type,
       stem: stemText,
       options: ['正确', '错误'],
@@ -352,6 +362,7 @@ export function parseStructuredQuestion(
   }
 
   return {
+    source_id: block.sourceId ?? undefined,
     type,
     stem: stemText,
     options:

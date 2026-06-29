@@ -418,14 +418,6 @@
       "title": "Performance by type",
       "meta": "{{total}} attempts · {{correct}} correct · {{accuracy}} accuracy"
     },
-    "heatmap": {
-      "title": "Last 4 weeks heatmap",
-      "subtitle": "Darker cells mean more practice on that day, making your study rhythm visible at a glance.",
-      "cell": "{{date}} · {{count}} attempts · {{accuracy}} accuracy",
-      "noAccuracy": "N/A",
-      "less": "Less",
-      "more": "More"
-    },
     "dailyTrend": {
       "title": "Last 7 days"
     },

@@ -15,10 +15,18 @@ vi.mock('../../src/main/services/parser/index.js', () => ({
 
 // Mock LLM provider
 const identifyMock = vi.hoisted(() => vi.fn());
+const identifyMarkdownMock = vi.hoisted(() => vi.fn());
+const markdownMode = vi.hoisted(() => ({ enabled: false }));
 vi.mock('../../src/main/services/llm/index.js', () => ({
-  getLLMProvider: () => ({
-    identifyQuestions: identifyMock,
-  }),
+  getLLMProvider: () =>
+    markdownMode.enabled
+      ? {
+          identifyQuestions: identifyMock,
+          identifyQuestionMarkdown: identifyMarkdownMock,
+        }
+      : {
+          identifyQuestions: identifyMock,
+        },
 }));
 
 import { identifyQuestions } from '../../src/main/services/identifier.js';
@@ -37,6 +45,8 @@ describe('identifyQuestions', () => {
   beforeEach(() => {
     parseFileMock.mockReset();
     identifyMock.mockReset();
+    identifyMarkdownMock.mockReset();
+    markdownMode.enabled = false;
   });
 
   it('短文档直接调用一次 LLM', async () => {
@@ -48,6 +58,32 @@ describe('identifyQuestions', () => {
     const result = await identifyQuestions(fakeDoc);
     expect(identifyMock).toHaveBeenCalledTimes(1);
     expect(result).toHaveLength(1);
+  });
+
+  it('会先让 AI 输出标准 Markdown，再由本地结构化成题目', async () => {
+    markdownMode.enabled = true;
+    parseFileMock.mockResolvedValue({ text: 'Java 复习题', pageCount: 1 });
+    identifyMarkdownMock.mockResolvedValue(`
+## 单选题
+
+### 1. 哪个注解用于控制层切片测试？
+- A. @SpringBootTest
+- B. @WebMvcTest
+Type: choice
+Answer: B
+Explanation: @WebMvcTest 用于控制层切片测试。
+`);
+
+    const result = await identifyQuestions(fakeDoc);
+    expect(identifyMarkdownMock).toHaveBeenCalledTimes(1);
+    expect(identifyMock).not.toHaveBeenCalled();
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      type: 'choice',
+      stem: '哪个注解用于控制层切片测试？',
+      options: ['@SpringBootTest', '@WebMvcTest'],
+      answer: 'B',
+    });
   });
 
   it('大文档自动切片并发调用（每个 chunk 一个提示）', async () => {
@@ -121,6 +157,35 @@ describe('identifyQuestions', () => {
 
     const result = await identifyQuestions(fakeDoc);
     expect(identifyMock).toHaveBeenCalledTimes(1);
+    expect(result.map((q) => q.source_id)).toEqual(['q1', 'q2', 'q3', 'q4']);
+  });
+
+  it('Markdown-first 批量识别后仍能保留 QUESTION_ID 对应关系', async () => {
+    markdownMode.enabled = true;
+    const dense = Array.from(
+      { length: 4 },
+      (_, i) => `${i + 1}. 第${i + 1}题题干\nA. 选项甲\nB. 选项乙\n答案：A`,
+    ).join('\n');
+    parseFileMock.mockResolvedValue({ text: dense, pageCount: 1 });
+    identifyMarkdownMock.mockImplementation(async (input: { text?: string }) => {
+      const ids = [...(input.text ?? '').matchAll(/QUESTION_ID:(q\d+)/g)].map((m) => m[1]);
+      return ids
+        .map(
+          (sourceId, index) => `
+## 单选题
+<!-- QUESTION_ID:${sourceId} -->
+### ${index + 1}. ${sourceId} 题干
+- A. 选项甲
+- B. 选项乙
+Type: choice
+Answer: A
+`,
+        )
+        .join('\n');
+    });
+
+    const result = await identifyQuestions(fakeDoc);
+    expect(identifyMarkdownMock).toHaveBeenCalledTimes(1);
     expect(result.map((q) => q.source_id)).toEqual(['q1', 'q2', 'q3', 'q4']);
   });
 

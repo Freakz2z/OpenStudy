@@ -17,4 +17,10 @@ export class DeepSeekProvider implements LLMProvider {
   async identifyQuestions(input: Parameters<LLMProvider['identifyQuestions']>[0]) {
     return this.inner.identifyQuestions(input);
   }
+
+  async identifyQuestionMarkdown(
+    input: Parameters<NonNullable<LLMProvider['identifyQuestionMarkdown']>>[0],
+  ) {
+    return this.inner.identifyQuestionMarkdown(input);
+  }
 }

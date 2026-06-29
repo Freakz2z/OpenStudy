@@ -418,14 +418,6 @@
       "title": "题型表现",
       "meta": "共 {{total}} 题 · 答对 {{correct}} 题 · 正确率 {{accuracy}}"
     },
-    "heatmap": {
-      "title": "最近 4 周热力图",
-      "subtitle": "颜色越深表示当天练习越多，可以直接看出你的学习节奏是否稳定。",
-      "cell": "{{date}} · {{count}} 次作答 · 正确率 {{accuracy}}",
-      "noAccuracy": "暂无",
-      "less": "少",
-      "more": "多"
-    },
     "dailyTrend": {
       "title": "近 7 天练习"
     },

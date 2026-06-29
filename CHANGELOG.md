@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), but stays lightweight for a fast-moving desktop project.
 
+## [0.2.1] - 2026-06-29
+
+### Fixed
+
+- Switched AI identification to a Markdown-first two-stage pipeline: the model now normalizes source material into the OpenStudy standard first, then the app locally structures questions from that standard Markdown
+- Preserved `QUESTION_ID` metadata through the Markdown-to-question parsing path so batch matching and integrity checks continue to work after the pipeline change
+- Added regression coverage for Markdown-first identification, source-id recovery, and provider-side standard-Markdown generation
+
 ## [0.2.0] - 2026-06-29
 
 ### Added

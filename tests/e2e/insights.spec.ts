@@ -86,7 +86,7 @@ test.describe('Insights 页面', () => {
     await expect(page.getByText(/No handler registered for 'llm:studyInsights'/)).toHaveCount(0);
   });
 
-  test('会展示学习画像与最近 4 周热力图', async ({ page }) => {
+  test('会展示学习画像', async ({ page }) => {
     const now = new Date();
     const makeTime = (dayOffset: number, hour: number) => {
       const value = new Date(now);
@@ -142,7 +142,5 @@ test.describe('Insights 页面', () => {
     await expect(page.getByRole('heading', { name: '学习画像' })).toBeVisible();
     await expect(page.getByText('高频时段')).toBeVisible();
     await expect(page.getByText('晚间学习')).toBeVisible();
-    await expect(page.getByRole('heading', { name: '最近 4 周热力图' })).toBeVisible();
-    await expect(page.getByTestId('insights-heatmap').locator('.insights-heatmap-cell')).toHaveCount(28);
   });
 });

@@ -36,7 +36,7 @@ test.describe('「关于」页面', () => {
     await installApiMock(page, {
       overrides: {
         checkLatestRelease: `() => Promise.resolve({
-          currentVersion: '0.2.0',
+          currentVersion: '0.2.1',
           latestVersion: '0.3.0',
           upToDate: false,
           checkedAt: Date.now(),
@@ -57,6 +57,45 @@ test.describe('「关于」页面', () => {
     await expect(page.getByRole('heading', { name: '技术栈' })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: '许可证' })).toHaveCount(0);
     await expect(page.getByText('Electron + React + TypeScript')).toHaveCount(0);
+  });
+
+  test('旧环境缺少版本相关 API 时，About 页面也会回退到浏览器侧版本检查', async ({
+    page,
+  }) => {
+    await installApiMock(page);
+    await page.addInitScript(() => {
+      const api = (window as unknown as { api?: Record<string, unknown> }).api;
+      if (!api) return;
+      delete api.getAppMeta;
+      delete api.checkLatestRelease;
+      const originalFetch = window.fetch.bind(window);
+      window.fetch = async (input, init) => {
+        const url = typeof input === 'string' ? input : input instanceof Request ? input.url : '';
+        if (url.includes('/repos/Freakz2z/OpenStudy/releases/latest')) {
+          return new Response(
+            JSON.stringify({
+              tag_name: 'v0.3.0',
+              html_url: 'https://github.com/Freakz2z/OpenStudy/releases/tag/v0.3.0',
+            }),
+            {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' },
+            },
+          );
+        }
+        return originalFetch(input, init);
+      };
+    });
+    await page.goto('/#/about');
+    await expect(page.getByRole('heading', { name: '关于' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '版本状态' })).toBeVisible();
+    await expect(page.getByText('v0.2.1').first()).toBeVisible();
+    await expect(page.getByText('v0.3.0')).toBeVisible();
+    await expect(page.getByText('发现新版本')).toBeVisible();
+    await expect(page.getByRole('link', { name: 'GitHub 仓库' })).toHaveAttribute(
+      'href',
+      'https://github.com/Freakz2z/OpenStudy',
+    );
   });
 
   test('英文模式下显示 About / Philosophy / Features / Version status', async ({ page }) => {

@@ -10,10 +10,11 @@ import {
 } from '../../shared/question-format.js';
 import type { MarkdownStandardLanguage } from '../../shared/markdown-standard.js';
 import { parseFile, type ParseFileOptions } from './parser/index.js';
-import { getLLMProvider } from './llm/index.js';
+import { getLLMProvider, type LLMProvider } from './llm/index.js';
 import { splitText } from './chunker.js';
 import { normalizeStandardMarkdown } from '../../shared/markdown-standard.js';
 import {
+  parseStructuredQuestions,
   segmentQuestionDocument,
   type SourceQuestionBlock,
 } from './question-structure.js';
@@ -87,6 +88,7 @@ export async function identifyQuestions(
   if (structured.blocks.length > 0) {
     return identifyStructuredBlocks(doc, structured.blocks, {
       concurrency: opts.concurrency ?? 3,
+      standardLang: opts.standardLang,
       onProgress,
       onAudit,
     });
@@ -106,6 +108,7 @@ async function identifyStructuredBlocks(
   blocks: SourceQuestionBlock[],
   opts: {
     concurrency: number;
+    standardLang?: MarkdownStandardLanguage;
     onProgress?: (p: IdentifyProgress) => void;
     onAudit?: (event: IdentifyAuditEvent) => void;
   },
@@ -133,12 +136,16 @@ async function identifyStructuredBlocks(
   const batchResults = await mapWithConcurrency(batches, opts.concurrency, async (batch, batchIndex) => {
     let items: ExtractedQuestion[] = [];
     try {
-      items = await provider.identifyQuestions({
+      items = await identifyQuestionsWithMarkdownFirst(provider, {
         text: renderBlockMarkdown(batch),
         hint:
           `${doc.title}。本批恰好包含 ${batch.length} 个 Markdown 题块；` +
+          '请先整理成 OpenStudy 标准 Markdown，再由系统本地结构化；' +
           '逐题理解题型、题干、选项、答案与解析，严格保留每个 QUESTION_ID，输出题数必须与题块数一致。' +
-          '所有选择题选项均已规范为 A/B/C/D 前缀，answer 必须是对应字母。',
+          '所有选择题选项均已规范为 A/B/C/D 前缀，Answer 必须是对应字母。',
+        standardLang: opts.standardLang,
+        preserveSourceId: true,
+        maxQuestions: batch.length,
       });
     } catch {
       // 批处理失败时不丢题，下面会逐题重试。
@@ -199,7 +206,7 @@ async function identifyStructuredBlocks(
     completed = 0;
     const recovered = await mapWithConcurrency(unresolved, opts.concurrency, async (block) => {
       const mapping = mappings.get(block.index);
-      const item = await identifySingleBlock(doc, block, mapping, opts.onAudit);
+      const item = await identifySingleBlock(doc, block, mapping, opts.standardLang, opts.onAudit);
       completed++;
       opts.onProgress?.({
         phase: 'llm',
@@ -403,6 +410,7 @@ async function identifySingleBlock(
   doc: Document,
   block: SourceQuestionBlock,
   mapping?: Map<string, string>,
+  standardLang?: MarkdownStandardLanguage,
   onAudit?: (event: IdentifyAuditEvent) => void,
 ): Promise<ExtractedQuestion | null> {
   const provider = getLLMProvider();
@@ -414,12 +422,15 @@ async function identifySingleBlock(
 
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
-      const items = await provider.identifyQuestions({
+      const items = await identifyQuestionsWithMarkdownFirst(provider, {
         text: source,
         hint:
           attempt === 1
             ? baseHint
             : `${baseHint} 上次未得到完整结果；请优先依据 Type 字段和题目内容恢复结构，并确保 stem、type、answer 完整。`,
+        standardLang,
+        preserveSourceId: true,
+        maxQuestions: 1,
       });
       const candidate = items.find(
         (item) => isUsableQuestion(item) && (!item.source_id || item.source_id === sourceId(block)),
@@ -504,9 +515,10 @@ async function identifyUnstructuredText(
 
   if (text.length <= threshold) {
     onProgress?.({ phase: 'llm', message: '正在调用 AI 识别非标准文档…', current: 1, total: 1 });
-    const items = await provider.identifyQuestions({
+    const items = await identifyQuestionsWithMarkdownFirst(provider, {
       text,
-      hint: `${doc.title}。原文没有稳定题号，请根据语义识别题目。`,
+      hint: `${doc.title}。原文没有稳定题号，请先整理为 OpenStudy 标准 Markdown，再由系统本地结构化题目。`,
+      standardLang: opts.standardLang,
     });
     const result = dedupeQuestions(items.filter(isUsableQuestion));
     if (result.length === 0) {
@@ -532,9 +544,13 @@ async function identifyUnstructuredText(
   const results = await mapWithConcurrency(chunks, concurrency, async (chunk) => {
     let items: ExtractedQuestion[] = [];
     try {
-      items = await provider.identifyQuestions({
+      items = await identifyQuestionsWithMarkdownFirst(provider, {
         text: chunk.text,
-        hint: `${doc.title} · 块 ${chunk.index + 1}/${chunks.length}。原文格式不规则，请识别本块所有完整题目，最多返回 8 道。`,
+        hint:
+          `${doc.title} · 块 ${chunk.index + 1}/${chunks.length}。原文格式不规则，` +
+          '请先整理为 OpenStudy 标准 Markdown，再由系统本地结构化本块所有完整题目。',
+        standardLang: opts.standardLang,
+        maxQuestions: 8,
       });
     } catch {
       opts.onAudit?.({
@@ -583,6 +599,32 @@ async function mapWithConcurrency<T, R>(
 function trimTextPreview(text: string, max = 240): string {
   const normalized = text.replace(/\s+/g, ' ').trim();
   return normalized.length > max ? `${normalized.slice(0, max)}…` : normalized;
+}
+
+async function identifyQuestionsWithMarkdownFirst(
+  provider: LLMProvider,
+  input: Parameters<NonNullable<LLMProvider['identifyQuestionMarkdown']>>[0],
+): Promise<ExtractedQuestion[]> {
+  if (typeof provider.identifyQuestionMarkdown === 'function') {
+    const markdown = await provider.identifyQuestionMarkdown(input);
+    return parseMarkdownToQuestions(markdown, input.standardLang);
+  }
+  return provider.identifyQuestions(input);
+}
+
+function parseMarkdownToQuestions(
+  markdown: string,
+  standardLang?: MarkdownStandardLanguage,
+): ExtractedQuestion[] {
+  const normalized = normalizeStandardMarkdown(markdown, standardLang);
+  const { blocks, questions } = parseStructuredQuestions(normalized);
+  return questions.flatMap((question, index) => {
+    if (!question || !isUsableQuestion(question)) return [];
+    return [{
+      ...question,
+      source_id: question.source_id ?? blocks[index]?.sourceId ?? undefined,
+    }];
+  });
 }
 
 function trimBlockPreview(blocks: SourceQuestionBlock[]): string {

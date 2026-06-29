@@ -5,42 +5,127 @@ import type { AppMeta, AppVersionInfo } from '@shared/types';
 import { BrandLogo } from '../components/BrandLogo';
 import { PageHeader } from '../components/PageHeader';
 
+const FALLBACK_REPOSITORY_URL = 'https://github.com/Freakz2z/OpenStudy';
+const FALLBACK_RELEASES_URL = `${FALLBACK_REPOSITORY_URL}/releases`;
+const FALLBACK_RELEASE_API = 'https://api.github.com/repos/Freakz2z/OpenStudy/releases/latest';
+const FALLBACK_APP_VERSION = import.meta.env.VITE_APP_VERSION || '0.2.1';
+
+type AboutCompatApi = Partial<
+  Pick<typeof window.api, 'getAppMeta' | 'checkLatestRelease'>
+>;
+
+function getAboutApi(): AboutCompatApi {
+  return ((window as unknown as { api?: AboutCompatApi }).api ?? {}) as AboutCompatApi;
+}
+
+function normalizeVersion(version: string): string[] {
+  return version
+    .trim()
+    .replace(/^v/i, '')
+    .split('-')[0]
+    .split('.')
+    .map((segment) => segment.replace(/\D+/g, ''))
+    .filter(Boolean);
+}
+
+function compareVersions(a: string, b: string): number {
+  const left = normalizeVersion(a);
+  const right = normalizeVersion(b);
+  const maxLength = Math.max(left.length, right.length);
+  for (let index = 0; index < maxLength; index += 1) {
+    const l = Number(left[index] ?? '0');
+    const r = Number(right[index] ?? '0');
+    if (l > r) return 1;
+    if (l < r) return -1;
+  }
+  return 0;
+}
+
+function buildFallbackMeta(name: string): AppMeta {
+  return {
+    name,
+    version: FALLBACK_APP_VERSION,
+    repositoryUrl: FALLBACK_REPOSITORY_URL,
+    releasesUrl: FALLBACK_RELEASES_URL,
+  };
+}
+
+async function fetchLatestReleaseFromBrowser(currentVersion: string): Promise<AppVersionInfo> {
+  const checkedAt = Date.now();
+  const fallbackReleaseUrl = `${FALLBACK_RELEASES_URL}/latest`;
+
+  try {
+    const response = await fetch(FALLBACK_RELEASE_API, {
+      headers: {
+        Accept: 'application/vnd.github+json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`GitHub API responded with ${response.status}`);
+    }
+
+    const payload = (await response.json()) as {
+      tag_name?: string;
+      html_url?: string;
+    };
+    const latestVersion = payload.tag_name?.replace(/^v/i, '') ?? null;
+    return {
+      currentVersion,
+      latestVersion,
+      upToDate: latestVersion ? compareVersions(currentVersion, latestVersion) >= 0 : null,
+      checkedAt,
+      releaseUrl: payload.html_url || fallbackReleaseUrl,
+      error: null,
+    };
+  } catch (error) {
+    return {
+      currentVersion,
+      latestVersion: null,
+      upToDate: null,
+      checkedAt,
+      releaseUrl: fallbackReleaseUrl,
+      error: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 export default function About() {
   const { t } = useTranslation();
-  const [meta, setMeta] = useState<AppMeta | null>(null);
+  const [meta, setMeta] = useState<AppMeta | null>(() => buildFallbackMeta('OpenStudy'));
   const [versionInfo, setVersionInfo] = useState<AppVersionInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
   async function load(force = false) {
     setLoading(true);
     try {
-      const [appMeta, latest] = await Promise.all([
-        window.api.getAppMeta(),
-        window.api.checkLatestRelease(force),
-      ]);
-      setMeta(appMeta);
-      setVersionInfo(latest);
+      const api = getAboutApi();
+      const fallbackMeta = buildFallbackMeta(t('app.name'));
+      const appMeta = await (api.getAppMeta?.().catch(() => null) ?? Promise.resolve(null));
+      const resolvedMeta = appMeta ?? fallbackMeta;
+      setMeta(resolvedMeta);
+
+      const latest = await (api.checkLatestRelease?.(force).catch(() => null) ??
+        fetchLatestReleaseFromBrowser(resolvedMeta.version));
+
+      setVersionInfo(
+        latest ?? {
+          currentVersion: resolvedMeta.version,
+          latestVersion: null,
+          upToDate: null,
+          checkedAt: Date.now(),
+          releaseUrl: `${resolvedMeta.releasesUrl}/latest`,
+          error: 'Version service unavailable',
+        },
+      );
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    let active = true;
-    setLoading(true);
-    void Promise.all([window.api.getAppMeta(), window.api.checkLatestRelease(false)])
-      .then(([appMeta, latest]) => {
-        if (!active) return;
-        setMeta(appMeta);
-        setVersionInfo(latest);
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
+    void load(false);
+  }, [t]);
 
   const checkedAtText = versionInfo
     ? new Date(versionInfo.checkedAt).toLocaleString()
@@ -72,7 +157,7 @@ export default function About() {
           <div className="about-meta-row">
             <span className="badge">v{meta?.version ?? '—'}</span>
             <a
-              href={meta?.repositoryUrl ?? 'https://github.com/Freakz2z/OpenStudy'}
+              href={meta?.repositoryUrl ?? FALLBACK_REPOSITORY_URL}
               target="_blank"
               rel="noreferrer"
               className="about-link"

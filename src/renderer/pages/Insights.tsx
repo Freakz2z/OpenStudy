@@ -492,38 +492,6 @@ export default function Insights() {
     ? t('insights.profile.coverage.single')
     : t('insights.profile.coverage.multi', { count: byDoc.length });
 
-  const heatmapDays = useMemo(() => {
-    const days = buildRecentDays(28);
-    const map = new Map<number, { total: number; correct: number }>();
-    for (const day of days) {
-      map.set(day, { total: 0, correct: 0 });
-    }
-    for (const item of attempts) {
-      const key = startOfDay(item.attempted_at);
-      const current = map.get(key);
-      if (!current) continue;
-      current.total += 1;
-      if (item.is_correct) current.correct += 1;
-    }
-    const maxTotal = Math.max(...days.map((day) => map.get(day)?.total ?? 0), 0);
-    return days.map((day) => {
-      const current = map.get(day) ?? { total: 0, correct: 0 };
-      const intensity = current.total === 0 || maxTotal === 0
-        ? 0
-        : Math.min(4, Math.max(1, Math.ceil((current.total / maxTotal) * 4)));
-      return {
-        day,
-        total: current.total,
-        accuracy: current.total > 0 ? current.correct / current.total : null,
-        label: new Date(day).toLocaleDateString(i18n.language, {
-          month: 'numeric',
-          day: 'numeric',
-        }),
-        intensity,
-      };
-    });
-  }, [attempts, i18n.language]);
-
   return (
     <div className="page insights-page">
       <PageHeader
@@ -646,53 +614,6 @@ export default function Insights() {
                     : t('insights.focus.none')}
                 </strong>
               </div>
-            </div>
-          </section>
-
-          <section className="card panel-card insights-heatmap-panel">
-            <div className="card-header">
-              <h2>{t('insights.heatmap.title')}</h2>
-            </div>
-            <p className="overview-list-meta insights-heatmap-subtitle">
-              {t('insights.heatmap.subtitle')}
-            </p>
-            <div className="insights-heatmap" data-testid="insights-heatmap">
-              {heatmapDays.map((item) => (
-                <div
-                  key={item.day}
-                  className={`insights-heatmap-cell level-${item.intensity}`}
-                  title={t('insights.heatmap.cell', {
-                    date: item.label,
-                    count: item.total,
-                    accuracy:
-                      item.accuracy == null
-                        ? t('insights.heatmap.noAccuracy')
-                        : formatPct(item.accuracy),
-                  })}
-                >
-                  <span className="sr-only">
-                    {t('insights.heatmap.cell', {
-                      date: item.label,
-                      count: item.total,
-                      accuracy:
-                        item.accuracy == null
-                          ? t('insights.heatmap.noAccuracy')
-                          : formatPct(item.accuracy),
-                    })}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div className="insights-heatmap-legend">
-              <span>{t('insights.heatmap.less')}</span>
-              {[0, 1, 2, 3, 4].map((level) => (
-                <span
-                  key={level}
-                  className={`insights-heatmap-legend-swatch level-${level}`}
-                  aria-hidden="true"
-                />
-              ))}
-              <span>{t('insights.heatmap.more')}</span>
             </div>
           </section>
 

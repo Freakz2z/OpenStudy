@@ -129,4 +129,21 @@ Answer: Red, green, refactor.`;
       answer: 'AB',
     });
   });
+
+  it('会从 QUESTION_ID 注释中恢复 source_id', () => {
+    const text = `## 单选题
+<!-- QUESTION_ID:q9 PAGE:2 -->
+### 1. 哪个选项正确？
+A. 甲
+B. 乙
+Type: choice
+Answer: A`;
+
+    const result = parseStructuredQuestions(text);
+    expect(result.blocks[0]?.sourceId).toBe('q9');
+    expect(result.questions[0]).toMatchObject({
+      source_id: 'q9',
+      answer: 'A',
+    });
+  });
 });
