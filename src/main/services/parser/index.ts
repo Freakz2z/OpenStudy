@@ -5,11 +5,22 @@ import { parseText } from './text.js';
 import { parsePdf } from './pdf.js';
 import { parseDocx } from './docx.js';
 import { parsePptx } from './pptx.js';
+import {
+  convertWithMarkItDown,
+  supportsMarkItDownConversion,
+} from '../markitdown.js';
 
 export interface ParsedDoc {
   text: string;
+  markdown?: string;
   pageCount?: number;
   images?: Array<{ base64: string; mime: string; page: number }>;
+  source?: 'native' | 'markitdown';
+}
+
+export interface ParseFileOptions {
+  markdown?: string;
+  source?: 'auto' | 'native' | 'markitdown';
 }
 
 // 单个文档解析的最大字节数（10MB）。
@@ -46,27 +57,86 @@ async function assertSizeOk(filePath: string, fileType: FileType): Promise<void>
 export async function parseFile(
   filePath: string,
   fileType: FileType,
+  options: ParseFileOptions = {},
 ): Promise<ParsedDoc> {
+  if (options.markdown?.trim()) {
+    const markdown = cleanImportedMarkdown(options.markdown);
+    return {
+      text: cleanText(markdown),
+      markdown,
+      source: options.source === 'native' ? 'native' : 'markitdown',
+    };
+  }
+
   await assertSizeOk(filePath, fileType);
+  const sourcePreference = options.source ?? 'auto';
   try {
     switch (fileType) {
       case 'txt':
       case 'md':
-        return { text: cleanText(await parseText(filePath)) };
+        return { text: cleanText(await parseText(filePath)), source: 'native' };
       case 'pdf': {
+        const byMarkItDown = await tryMarkItDown(filePath, fileType, sourcePreference);
+        if (byMarkItDown) return byMarkItDown;
         const r = await parsePdf(filePath);
-        return { text: cleanText(r.text), pageCount: r.pageCount };
+        return { text: cleanText(r.text), pageCount: r.pageCount, source: 'native' };
       }
       case 'docx':
-        return { text: cleanText(await parseDocx(filePath)) };
-      case 'pptx':
-        return { text: cleanText(await parsePptx(filePath)) };
+      case 'pptx': {
+        const byMarkItDown = await tryMarkItDown(filePath, fileType, sourcePreference);
+        if (byMarkItDown) return byMarkItDown;
+        if (fileType === 'docx') {
+          return { text: cleanText(await parseDocx(filePath)), source: 'native' };
+        }
+        return { text: cleanText(await parsePptx(filePath)), source: 'native' };
+      }
+      case 'html':
+      case 'csv':
+      case 'xlsx':
+      case 'xls':
+      case 'epub':
+      case 'png':
+      case 'jpg':
+      case 'webp': {
+        const byMarkItDown = await tryMarkItDown(filePath, fileType, sourcePreference);
+        if (byMarkItDown) return byMarkItDown;
+        if (fileType === 'html' || fileType === 'csv') {
+          return { text: cleanText(await parseText(filePath)), source: 'native' };
+        }
+        throw new Error(
+          `${fileType.toUpperCase()} 需要 MarkItDown。请先运行 npm run markitdown:install`,
+        );
+      }
     }
   } catch (e) {
     if (e instanceof FileTooLargeError) throw e;
     const fname = basename(filePath);
     const msg = (e as Error).message;
     throw new Error(`解析 ${fname} (${fileType}) 失败：${msg}`);
+  }
+}
+
+async function tryMarkItDown(
+  filePath: string,
+  fileType: FileType,
+  sourcePreference: ParseFileOptions['source'],
+): Promise<ParsedDoc | null> {
+  if (sourcePreference === 'native' || !supportsMarkItDownConversion(fileType)) return null;
+  try {
+    const result = await convertWithMarkItDown(filePath);
+    return {
+      text: cleanText(result.markdown),
+      markdown: cleanImportedMarkdown(result.markdown),
+      source: 'markitdown',
+    };
+  } catch (error) {
+    if (sourcePreference === 'markitdown') {
+      throw error;
+    }
+    if (['html', 'csv', 'xlsx', 'xls', 'epub', 'png', 'jpg', 'webp'].includes(fileType)) {
+      throw error;
+    }
+    return null;
   }
 }
 
@@ -88,6 +158,15 @@ export function cleanText(raw: string): string {
     // 合并连续普通空格（保留 tab，因为它是有意义的分隔符）
     .replace(/ {2,}/g, ' ')
     // 合并连续空行（保留最多 2 个换行）
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function cleanImportedMarkdown(raw: string): string {
+  return raw
+    .replace(/\r\n/g, '\n')
+    .replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, ' ')
+    .replace(new RegExp(`[${ZERO_WIDTH}]`, 'g'), '')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }

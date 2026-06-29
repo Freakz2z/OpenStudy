@@ -9,7 +9,7 @@
 
 <p><strong>From Markdown notes to deliberate practice.</strong></p>
 
-<p>OpenStudy is a Markdown-first AI study workspace for turning raw notes into structured questions, focused practice, explainable feedback, and a study loop you can keep using every day.</p>
+<p>OpenStudy is a Markdown-first AI study workspace for turning raw notes and imported documents into structured questions, focused practice, explainable feedback, and a study loop you can keep using every day.</p>
 
 [![Release](https://img.shields.io/github/v/release/Freakz2z/OpenStudy?include_prereleases&sort=semver)](https://github.com/Freakz2z/OpenStudy/releases)
 [![Build](https://img.shields.io/github/actions/workflow/status/Freakz2z/OpenStudy/release.yml?label=release)](https://github.com/Freakz2z/OpenStudy/actions/workflows/release.yml)
@@ -43,6 +43,7 @@ Instead of treating a Markdown note set as a dead asset, OpenStudy turns it into
 ## What You Can Do
 
 - **Markdown-first by default**: keep your source material editable, durable, and versionable.
+- **Bring documents into Markdown, not into a black box**: convert PDF, Word, PowerPoint, HTML, CSV, and more through MarkItDown, then keep working in a clean Markdown workflow.
 - **AI cleanup, not AI chaos**: turn rough notes into usable questions without giving up structure.
 - **Practice built for repetition**: move fast with shortcuts, retries, and bottom-pinned core actions.
 - **Ask AI in the right moment**: get hints, explanations, and reasoning exactly where confusion appears.
@@ -64,9 +65,31 @@ Instead of treating a Markdown note set as a dead asset, OpenStudy turns it into
 
 The demo above walks through the exact README flow: `Import Markdown -> Edit Source -> Practice -> Ask AI -> Wrong Book -> Redo -> Insights`.
 
+## Markdown-First, Not Markdown-Only
+
+OpenStudy keeps Markdown as the editable source of truth, but it does not force every source file to begin as Markdown.
+
+MarkItDown works as the import gateway for formats such as PDF, Word, PowerPoint, HTML, CSV, Excel, EPUB, and selected image-based inputs. The converted result then flows back into the same Markdown-first review, identification, practice, and retry pipeline.
+
+Key CLI checks:
+
+```bash
+node bin/openstudy.mjs doctor
+node bin/openstudy.mjs setup markitdown
+node bin/openstudy.mjs convert ./notes.pdf -o ./notes.md
+node bin/openstudy.mjs ingest ./slides.pptx --title "Algorithms Review"
+```
+
 ## Standards
 
-OpenStudy is Markdown-first, but it is not "anything goes" Markdown. We use one stable question standard so AI cleanup, parsing, retry flows, and review all behave predictably.
+OpenStudy uses a two-layer standard:
+
+- **Author-facing Markdown** is the format you edit, diff, review, and keep in Git.
+- **Canonical JSON** is the internal structured contract for validation, automation, and future integrations.
+
+The canonical schema lives at [`schemas/openstudy-question-set.schema.json`](schemas/openstudy-question-set.schema.json), and the CLI can print or locate it with `openstudy standards schema --print`.
+
+Markdown is still opinionated. We use one stable question layout so AI cleanup, parsing, retry flows, and review all behave predictably.
 
 - Field labels stay ASCII: `Type:`, `Answer:`, `Explanation:`, optionally `Topic:` and `Tags:`.
 - Allowed `Type` values are `choice`, `multiple`, `judge`, `fill`, `short`, and `code`.
@@ -189,6 +212,28 @@ Explanation: @WebMvcTest is used for controller slice testing.
 
 </details>
 
+## CLI
+
+The desktop app and CLI share the same service layer, database, and question standard. The CLI is meant for conversion, ingestion, validation, export, automation, and LLM-backed study workflows.
+
+Common commands:
+
+```bash
+node bin/openstudy.mjs doctor
+node bin/openstudy.mjs docs list
+node bin/openstudy.mjs markdown get 12 -o ./document.md
+node bin/openstudy.mjs questions export 12 --format json -o ./question-set.json
+node bin/openstudy.mjs validate ./question-set.json --format json
+node bin/openstudy.mjs ai insights --doc 12 --limit 80 --language en
+```
+
+Standard helpers:
+
+```bash
+node bin/openstudy.mjs standards markdown --lang en
+node bin/openstudy.mjs standards schema --print
+```
+
 ## Downloads
 
 Download platform builds from the [Releases page](https://github.com/Freakz2z/OpenStudy/releases).
@@ -261,9 +306,9 @@ Generated installers are normalized to a consistent naming scheme:
 
 OpenStudy is already useful, but it is still intentionally lean:
 
-- The product direction is now firmly Markdown-first.
-- Very large Markdown sets are not yet automatically restructured beyond model limits.
-- The project is still evolving toward a more complete open-source study workflow.
+- Markdown remains the canonical study format even when the original source came from PDF, Office, or HTML.
+- OCR- or vision-heavy imports still depend on the surrounding MarkItDown and model environment.
+- Very large study sets are not yet automatically repartitioned beyond model-context limits.
 
 ## Contributing
 

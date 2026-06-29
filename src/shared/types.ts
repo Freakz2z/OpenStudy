@@ -1,6 +1,19 @@
 import type { ShortcutSettings } from './shortcuts.js';
 
-export type FileType = 'txt' | 'md' | 'pdf' | 'docx' | 'pptx';
+export type FileType =
+  | 'txt'
+  | 'md'
+  | 'pdf'
+  | 'docx'
+  | 'pptx'
+  | 'html'
+  | 'csv'
+  | 'xlsx'
+  | 'xls'
+  | 'epub'
+  | 'png'
+  | 'jpg'
+  | 'webp';
 export type QuestionType =
   | 'choice'
   | 'multiple'

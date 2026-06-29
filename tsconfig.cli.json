@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.node.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": "out/cli",
+    "rootDir": "src",
+    "types": ["node"]
+  },
+  "include": [
+    "src/cli/**/*",
+    "src/main/services/**/*",
+    "src/shared/**/*"
+  ]
+}

@@ -1,7 +1,7 @@
 {
   "name": "openstudy",
-  "version": "0.1.1",
-  "description": "AI-powered document-to-quiz desktop workspace for practice, review, and study insights",
+  "version": "0.2.0",
+  "description": "Markdown-first AI study workspace and CLI for conversion, question extraction, practice, review, and insights",
   "license": "MIT",
   "author": {
     "name": "Freakz2z",
@@ -16,20 +16,26 @@
     "url": "https://github.com/Freakz2z/OpenStudy/issues"
   },
   "main": "out/main/index.js",
+  "bin": {
+    "openstudy": "bin/openstudy.mjs"
+  },
   "type": "module",
   "scripts": {
     "dev": "electron-vite dev",
-    "build": "electron-vite build",
+    "build": "npm run build:cli && electron-vite build",
+    "build:cli": "node scripts/build-cli.mjs",
     "preview": "electron-vite preview",
     "start": "electron-vite preview",
+    "cli": "npm run build:cli && node bin/openstudy.mjs",
+    "markitdown:install": "npm run build:cli && node bin/openstudy.mjs setup markitdown",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
-    "pack": "electron-vite build && electron-builder --dir",
-    "dist": "electron-vite build && electron-builder --publish never",
-    "dist:mac": "electron-vite build && electron-builder --mac dmg --arm64 --publish never",
-    "dist:win": "electron-vite build && electron-builder --win --publish never",
-    "dist:linux": "electron-vite build && electron-builder --linux --publish never",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder --publish never",
+    "dist:mac": "npm run build && electron-builder --mac dmg --arm64 --publish never",
+    "dist:win": "npm run build && electron-builder --win --publish never",
+    "dist:linux": "npm run build && electron-builder --linux --publish never",
     "artifacts:collect": "node scripts/collect-release-artifacts.mjs",
     "docs:screenshots": "node scripts/capture-readme-screenshots.mjs",
     "docs:workflow-gif": "node scripts/capture-readme-workflow-gif.mjs",

@@ -4,11 +4,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import JSZip from 'jszip';
 import { parseFile } from '../../src/main/services/parser/index.js';
-import { textToMarkdown } from '../../src/main/services/parser/markdown.js';
 import { segmentQuestionDocument } from '../../src/main/services/question-structure.js';
 import { analyzeMarkdownPrecheck } from '../../src/shared/question-diagnostics.js';
 import type { FileType } from '../../src/shared/types.js';
 import type { Document } from '../../src/shared/types.js';
+import { parsedDocToMarkdown } from '../../src/main/services/markdown-workflow.js';
 
 const identifyMock = vi.hoisted(() => vi.fn());
 vi.mock('../../src/main/services/llm/index.js', () => ({
@@ -216,8 +216,8 @@ describe('cross-format Markdown-first matrix', () => {
   it('all supported formats become auditable Markdown question blocks', async () => {
     expect(files).toHaveLength(5);
     for (const fixture of files) {
-      const parsed = await parseFile(fixture.name, fixture.type);
-      const markdown = textToMarkdown(parsed.text);
+      const parsed = await parseFile(fixture.name, fixture.type, { source: 'native' });
+      const markdown = parsedDocToMarkdown(parsed);
       const blocks = segmentQuestionDocument(markdown).blocks;
       const precheck = analyzeMarkdownPrecheck(markdown);
       expect(blocks, fixture.type).toHaveLength(fixture.expected);
@@ -230,8 +230,8 @@ describe('cross-format Markdown-first matrix', () => {
     const path = join(dir, 'unnumbered.txt');
     const source = '问题：为什么需要单元测试？\n参考回答：它能快速验证局部行为。';
     await writeFile(path, source, 'utf8');
-    const parsed = await parseFile(path, 'txt');
-    const markdown = textToMarkdown(parsed.text);
+    const parsed = await parseFile(path, 'txt', { source: 'native' });
+    const markdown = parsedDocToMarkdown(parsed);
     expect(segmentQuestionDocument(markdown).blocks).toHaveLength(0);
     expect(markdown).toContain('为什么需要单元测试');
   });
@@ -246,7 +246,7 @@ describe('cross-format Markdown-first matrix', () => {
         imported_at: 0,
         question_count: 0,
       };
-      const questions = await identifyQuestions(doc, { concurrency: 2 });
+      const questions = await identifyQuestions(doc, { concurrency: 2, parseSource: 'native' });
       expect(questions, fixture.type).toHaveLength(fixture.expected);
       expect(questions.every((question) => question.source_id), fixture.type).toBe(true);
     }

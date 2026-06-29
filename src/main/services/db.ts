@@ -1,5 +1,4 @@
 import Database from 'better-sqlite3';
-import { app } from 'electron';
 import { join } from 'node:path';
 import { existsSync, mkdirSync } from 'node:fs';
 import type {
@@ -15,6 +14,7 @@ import {
   normalizeChoiceAnswer,
   normalizeChoiceOptions,
 } from '../../shared/question-format.js';
+import { resolveAppDataDir } from './runtime-paths.js';
 
 let db: Database.Database | null = null;
 
@@ -91,7 +91,7 @@ function runMigrations(): void {
 
 export function getDb(): Database.Database {
   if (db) return db;
-  const userData = app.getPath('userData');
+  const userData = resolveAppDataDir();
   if (!existsSync(userData)) mkdirSync(userData, { recursive: true });
   const dbPath = join(userData, 'openstudy.db');
   db = new Database(dbPath);
@@ -228,6 +228,32 @@ export function listQuestionsByDocument(docId: number): Question[] {
     page_or_section: r.page_or_section,
     position: r.position,
   }));
+}
+
+export function getQuestion(qId: number): Question | undefined {
+  const row = getDb()
+    .prepare(`SELECT * FROM questions WHERE id = ?`)
+    .get(qId) as (Omit<Question, 'options'> & { options_json: string | null }) | undefined;
+  if (!row) return undefined;
+  return {
+    id: row.id,
+    document_id: row.document_id,
+    type: row.type,
+    stem: row.stem,
+    options: row.options_json
+      ? normalizeChoiceOptions(JSON.parse(row.options_json) as string[])
+      : null,
+    answer:
+      isOptionQuestion(row.type)
+        ? normalizeChoiceAnswer(
+            row.answer,
+            row.options_json ? (JSON.parse(row.options_json) as string[]) : null,
+          )
+        : row.answer,
+    explanation: row.explanation,
+    page_or_section: row.page_or_section,
+    position: row.position,
+  };
 }
 
 export function deleteQuestionsByDocument(docId: number): number {

@@ -12,6 +12,7 @@
     "types": ["node", "electron-vite/node"]
   },
   "include": [
+    "src/cli/**/*",
     "src/main/**/*",
     "src/preload/**/*",
     "src/shared/**/*",

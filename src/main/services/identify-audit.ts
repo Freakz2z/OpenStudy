@@ -1,4 +1,3 @@
-import { app } from 'electron';
 import { randomUUID } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -9,11 +8,12 @@ import type {
   IdentifyLogStatus,
 } from '../../shared/types.js';
 import { getSettings } from './store.js';
+import { resolveAppDataDir } from './runtime-paths.js';
 
 const LOG_FILE_NAME = 'identify-audit.jsonl';
 
 function getLogFilePath(): string {
-  return join(app.getPath('userData'), 'logs', LOG_FILE_NAME);
+  return join(resolveAppDataDir(), 'logs', LOG_FILE_NAME);
 }
 
 function trimPreview(text: string | null | undefined, max = 1800): string | undefined {

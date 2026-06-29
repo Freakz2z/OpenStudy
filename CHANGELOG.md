@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), but stays lightweight for a fast-moving desktop project.
 
+## [0.2.0] - 2026-06-29
+
+### Added
+
+- MarkItDown-backed document ingestion for bringing PDF, Word, PowerPoint, HTML, CSV, Excel, EPUB, and other supported files into the Markdown-first workflow
+- A shared OpenStudy CLI for doctor checks, conversion, ingestion, Markdown retrieval, question export, validation, attempts, stats, and AI-powered commands
+- A two-layer standard with author-facing Markdown and a canonical JSON question-set schema at `schemas/openstudy-question-set.schema.json`
+- Dedicated service layers for document import, Markdown workflow, question workflow, and runtime path management so desktop and CLI share the same business logic
+
+### Changed
+
+- Parsing now prefers MarkItDown for non-Markdown sources and falls back to native parsers where appropriate
+- Persistence paths were normalized so database, settings, and audit data can be reused outside the Electron runtime
+- README was expanded to document the Markdown-first plus MarkItDown model, CLI surface area, and the dual-standard contract
+
+### Notes
+
+- Markdown remains the canonical editable format even when the original source starts as PDF or Office content
+- OCR- and vision-heavy conversion quality still depends on the surrounding MarkItDown and model environment
+
 ## [0.1.1] - 2026-06-29
 
 ### Fixed

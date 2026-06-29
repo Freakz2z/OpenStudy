@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Freakz2z/OpenStudy/schemas/openstudy-question-set.schema.json",
+  "title": "OpenStudy Question Set",
+  "type": "object",
+  "required": ["version", "questions"],
+  "properties": {
+    "version": {
+      "const": "openstudy.question-set.v1"
+    },
+    "title": {
+      "type": "string"
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "path": { "type": "string" },
+        "fileType": { "type": "string" },
+        "importedAt": { "type": "number" }
+      },
+      "additionalProperties": false
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "stem", "answer"],
+        "properties": {
+          "id": {
+            "oneOf": [{ "type": "string" }, { "type": "number" }]
+          },
+          "sourceId": { "type": "string" },
+          "type": {
+            "enum": ["choice", "multiple", "judge", "fill", "short", "code"]
+          },
+          "stem": { "type": "string", "minLength": 1 },
+          "options": {
+            "type": ["array", "null"],
+            "items": { "type": "string" }
+          },
+          "answer": { "type": "string", "minLength": 1 },
+          "explanation": { "type": ["string", "null"] },
+          "pageOrSection": { "type": ["string", "null"] },
+          "tags": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "topic": { "type": "string" },
+          "position": { "type": "integer", "minimum": 0 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,7 +1,9 @@
-import Store from 'electron-store';
 import type { AppSettings } from '../../shared/types.js';
 import { getLLMProviderPreset } from '../../shared/llm-provider-presets.js';
 import { DEFAULT_SHORTCUTS, normalizeShortcutSettings } from '../../shared/shortcuts.js';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { ensureParentDir, resolveAppDataDir } from './runtime-paths.js';
 
 const deepseekPreset = getLLMProviderPreset('deepseek');
 const DEFAULTS: AppSettings = {
@@ -13,26 +15,39 @@ const DEFAULTS: AppSettings = {
   shortcuts: DEFAULT_SHORTCUTS,
 };
 
-let store: Store<AppSettings> | null = null;
+const SETTINGS_PATH = join(resolveAppDataDir(), 'settings.json');
 
-function getStore(): Store<AppSettings> {
-  if (!store) store = new Store<AppSettings>({ defaults: DEFAULTS });
-  return store;
+function normalizeSettings(raw?: Partial<AppSettings> | null): AppSettings {
+  return {
+    llm: {
+      ...DEFAULTS.llm,
+      ...(raw?.llm ?? {}),
+    },
+    shortcuts: normalizeShortcutSettings(raw?.shortcuts ?? DEFAULTS.shortcuts),
+  };
+}
+
+function readStore(): AppSettings {
+  try {
+    if (!existsSync(SETTINGS_PATH)) return DEFAULTS;
+    const raw = JSON.parse(readFileSync(SETTINGS_PATH, 'utf8')) as Partial<AppSettings>;
+    return normalizeSettings(raw);
+  } catch {
+    return DEFAULTS;
+  }
+}
+
+function writeStore(settings: AppSettings): AppSettings {
+  const normalized = normalizeSettings(settings);
+  ensureParentDir(SETTINGS_PATH);
+  writeFileSync(SETTINGS_PATH, `${JSON.stringify(normalized, null, 2)}\n`, 'utf8');
+  return normalized;
 }
 
 export function getSettings(): AppSettings {
-  const stored = getStore().store;
-  return {
-    ...stored,
-    shortcuts: normalizeShortcutSettings(stored.shortcuts),
-  };
+  return readStore();
 }
 
 export function updateSettings(s: AppSettings): AppSettings {
-  const st = getStore();
-  st.store = {
-    ...s,
-    shortcuts: normalizeShortcutSettings(s.shortcuts),
-  };
-  return st.store;
+  return writeStore(s);
 }

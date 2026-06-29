@@ -40,7 +40,7 @@ describe('parseFile 总入口', () => {
   it('抛错时包含文件名', async () => {
     const p = join(dir, 'broken.docx');
     await writeFile(p, 'not a real docx');
-    await expect(parseFile(p, 'docx')).rejects.toThrow(/解析 broken\.docx/);
+    await expect(parseFile(p, 'docx', { source: 'native' })).rejects.toThrow(/解析 broken\.docx/);
   });
 
   it('超过 MAX_FILE_BYTES 抛 FileTooLargeError', async () => {

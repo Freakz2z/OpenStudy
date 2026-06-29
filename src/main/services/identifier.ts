@@ -9,15 +9,15 @@ import {
   normalizeChoiceOptions,
 } from '../../shared/question-format.js';
 import type { MarkdownStandardLanguage } from '../../shared/markdown-standard.js';
-import { parseFile } from './parser/index.js';
+import { parseFile, type ParseFileOptions } from './parser/index.js';
 import { getLLMProvider } from './llm/index.js';
 import { splitText } from './chunker.js';
-import { textToMarkdown } from './parser/markdown.js';
 import { normalizeStandardMarkdown } from '../../shared/markdown-standard.js';
 import {
   segmentQuestionDocument,
   type SourceQuestionBlock,
 } from './question-structure.js';
+import { parsedDocToMarkdown } from './markdown-workflow.js';
 
 export interface IdentifyProgress {
   phase: 'parse' | 'llm' | 'merge' | 'done';
@@ -31,6 +31,7 @@ export interface IdentifyOptions {
   chunkSize?: number;
   concurrency?: number;
   standardLang?: MarkdownStandardLanguage;
+  parseSource?: ParseFileOptions['source'];
   onProgress?: (p: IdentifyProgress) => void;
   onAudit?: (event: IdentifyAuditEvent) => void;
 }
@@ -75,10 +76,10 @@ export async function identifyQuestions(
     markdown = normalizeStandardMarkdown(doc.extracted_markdown.trim(), opts.standardLang);
     onProgress?.({ phase: 'parse', message: `使用编辑后的 Markdown（${markdown.length} 字符）` });
   } else {
-    const parsed = await parseFile(doc.file_path, doc.file_type);
-    const text = parsed.text?.trim() ?? '';
+    const parsed = await parseFile(doc.file_path, doc.file_type, { source: opts.parseSource });
+    const text = (parsed.markdown ?? parsed.text)?.trim() ?? '';
     if (!hasMeaningfulDocumentText(text)) throw new OcrRequiredError(doc.file_path);
-    markdown = normalizeStandardMarkdown(textToMarkdown(text, opts.standardLang), opts.standardLang);
+    markdown = normalizeStandardMarkdown(parsedDocToMarkdown(parsed, opts.standardLang), opts.standardLang);
     onProgress?.({ phase: 'parse', message: `已转换为 Markdown，共 ${markdown.length} 字符` });
   }
 
