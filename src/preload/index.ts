@@ -1,5 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type {
+  AppMeta,
+  AppVersionInfo,
   Document,
   DocumentStats,
   IdentifyLogEntry,
@@ -30,6 +32,9 @@ export interface IdentifyProgress {
 
 const api = {
   ping: () => ipcRenderer.invoke('app:ping'),
+  getAppMeta: (): Promise<AppMeta> => ipcRenderer.invoke('app:getMeta'),
+  checkLatestRelease: (force?: boolean): Promise<AppVersionInfo> =>
+    ipcRenderer.invoke('app:checkLatestRelease', force),
   importFile: () => ipcRenderer.invoke('document:import'),
   listDocuments: (): Promise<Document[]> => ipcRenderer.invoke('document:list'),
   deleteDocument: (id: number) => ipcRenderer.invoke('document:delete', id),

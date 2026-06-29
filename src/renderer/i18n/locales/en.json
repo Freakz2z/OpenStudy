@@ -5,6 +5,8 @@
   },
   "about": {
     "title": "About",
+    "refresh": "Refresh version status",
+    "github": "GitHub repository",
     "philosophy": "Philosophy",
     "philosophyText": "We don't produce knowledge — we turn existing material into a stable, editable, practice-ready Markdown question bank. The focus is structured questions, clear feedback, and a study loop you can actually keep using.",
     "features": "Core Features",
@@ -12,9 +14,18 @@
     "feat2": "AI-assisted cleanup from raw source content into standardized questions",
     "feat3": "Unified practice, Ask AI, progress tracking, and directory navigation",
     "feat4": "Automatic wrong book and overview data for review, redo, and reflection",
-    "tech": "Tech Stack",
-    "license": "License",
-    "licenseText": "Released under the MIT License. Powered by Electron + React + DeepSeek."
+    "version": {
+      "title": "Version status",
+      "current": "Current version",
+      "latest": "Latest version",
+      "status": "Check result",
+      "upToDate": "Up to date",
+      "outdated": "Update available",
+      "unknown": "Unable to determine",
+      "goLatest": "Open latest release",
+      "checkedAt": "Last checked: {{time}}",
+      "checkFailed": "Version check failed: {{error}}"
+    }
   },
   "nav": {
     "primary": "Primary navigation",
@@ -377,9 +388,43 @@
       "streak": "Current streak",
       "activeDays": "Active days"
     },
+    "profile": {
+      "title": "Learner profile",
+      "summary": "{{archetype}}: {{attempts}} recent attempts across {{docs}} documents, active on {{activeDays}} days, with {{accuracy}} overall accuracy.",
+      "archetype": "Current mode",
+      "window": "Preferred window",
+      "focusDoc": "Primary focus document",
+      "strongestType": "Current strength",
+      "weakestType": "Current gap",
+      "coverage": {
+        "label": "Coverage",
+        "single": "Single-document deep dive",
+        "multi": "{{count}} documents in parallel"
+      },
+      "archetypes": {
+        "steady": "Steady builder",
+        "repair": "Repair-focused learner",
+        "deep": "Deep-dive learner",
+        "building": "Momentum builder"
+      },
+      "windows": {
+        "morning": "Morning study",
+        "afternoon": "Afternoon study",
+        "evening": "Evening study",
+        "lateNight": "Late-night study"
+      }
+    },
     "typeBreakdown": {
       "title": "Performance by type",
       "meta": "{{total}} attempts · {{correct}} correct · {{accuracy}} accuracy"
+    },
+    "heatmap": {
+      "title": "Last 4 weeks heatmap",
+      "subtitle": "Darker cells mean more practice on that day, making your study rhythm visible at a glance.",
+      "cell": "{{date}} · {{count}} attempts · {{accuracy}} accuracy",
+      "noAccuracy": "N/A",
+      "less": "Less",
+      "more": "More"
     },
     "dailyTrend": {
       "title": "Last 7 days"

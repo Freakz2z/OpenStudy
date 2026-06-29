@@ -199,6 +199,22 @@ export interface ModelTestResult {
   message: string;
 }
 
+export interface AppMeta {
+  name: string;
+  version: string;
+  repositoryUrl: string;
+  releasesUrl: string;
+}
+
+export interface AppVersionInfo {
+  currentVersion: string;
+  latestVersion: string | null;
+  upToDate: boolean | null;
+  checkedAt: number;
+  releaseUrl: string;
+  error?: string | null;
+}
+
 export interface StudyInsightsRequest {
   attempts: RecentAttemptDetail[];
   language?: 'zh' | 'en';

@@ -18,7 +18,7 @@ test.describe('Insights 页面', () => {
     await expect(page.getByText('最近做题', { exact: true })).toBeVisible();
     await expect(page.getByText('最近正确率', { exact: true })).toBeVisible();
     await expect(page.getByText('选择题', { exact: true })).toBeVisible();
-    await expect(page.getByText('历史简答', { exact: true })).toBeVisible();
+    await expect(page.getByText('历史简答').first()).toBeVisible();
     await expect(
       page.getByText(/No handler registered for 'attempt:listRecent'/),
     ).toHaveCount(0);
@@ -84,5 +84,65 @@ test.describe('Insights 页面', () => {
     await page.getByRole('button', { name: '分析洞察' }).click();
     await expect(page.getByText('兼容通道分析成功。')).toBeVisible();
     await expect(page.getByText(/No handler registered for 'llm:studyInsights'/)).toHaveCount(0);
+  });
+
+  test('会展示学习画像与最近 4 周热力图', async ({ page }) => {
+    const now = new Date();
+    const makeTime = (dayOffset: number, hour: number) => {
+      const value = new Date(now);
+      value.setDate(value.getDate() - dayOffset);
+      value.setHours(hour, 15, 0, 0);
+      return value.getTime();
+    };
+
+    await installApiMock(page, {
+      documents: [sampleDocs[1]],
+      questions: [sampleQuestions[0]],
+      overrides: {
+        listRecentAttempts: `() => Promise.resolve([
+          {
+            question_id: 101,
+            document_id: 2,
+            document_title: '历史简答',
+            question_type: 'choice',
+            question_stem: '中国的首都是？',
+            reference_answer: 'B',
+            user_answer: 'B',
+            is_correct: true,
+            attempted_at: ${makeTime(0, 21)}
+          },
+          {
+            question_id: 101,
+            document_id: 2,
+            document_title: '历史简答',
+            question_type: 'choice',
+            question_stem: '中国的首都是？',
+            reference_answer: 'B',
+            user_answer: 'B',
+            is_correct: true,
+            attempted_at: ${makeTime(1, 20)}
+          },
+          {
+            question_id: 101,
+            document_id: 2,
+            document_title: '历史简答',
+            question_type: 'choice',
+            question_stem: '中国的首都是？',
+            reference_answer: 'B',
+            user_answer: 'A',
+            is_correct: false,
+            attempted_at: ${makeTime(3, 22)}
+          }
+        ])`,
+      },
+    });
+
+    await page.goto('/#/insights');
+
+    await expect(page.getByRole('heading', { name: '学习画像' })).toBeVisible();
+    await expect(page.getByText('高频时段')).toBeVisible();
+    await expect(page.getByText('晚间学习')).toBeVisible();
+    await expect(page.getByRole('heading', { name: '最近 4 周热力图' })).toBeVisible();
+    await expect(page.getByTestId('insights-heatmap').locator('.insights-heatmap-cell')).toHaveCount(28);
   });
 });

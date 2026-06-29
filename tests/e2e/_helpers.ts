@@ -126,6 +126,22 @@ export async function installApiMock(
       const noop = () => Promise.resolve({ ok: true });
       w.api = {
         ping: () => Promise.resolve('pong'),
+        getAppMeta: () =>
+          Promise.resolve({
+            name: 'OpenStudy',
+            version: '0.2.0',
+            repositoryUrl: 'https://github.com/Freakz2z/OpenStudy',
+            releasesUrl: 'https://github.com/Freakz2z/OpenStudy/releases',
+          }),
+        checkLatestRelease: () =>
+          Promise.resolve({
+            currentVersion: '0.2.0',
+            latestVersion: '0.2.0',
+            upToDate: true,
+            checkedAt: Date.now(),
+            releaseUrl: 'https://github.com/Freakz2z/OpenStudy/releases/latest',
+            error: null,
+          }),
         getSettings: () => Promise.resolve(settings),
         updateSettings: (s: AppSettings) => {
           (window as unknown as { __lastSavedSettings: AppSettings }).__lastSavedSettings = s;

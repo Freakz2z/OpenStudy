@@ -5,6 +5,8 @@
   },
   "about": {
     "title": "关于",
+    "refresh": "刷新版本状态",
+    "github": "GitHub 仓库",
     "philosophy": "产品理念",
     "philosophyText": "不生产知识，只把已有内容整理成稳定、可编辑、可练习的 Markdown 题库。围绕结构化题目、练习反馈和错题回顾，把学习闭环真正跑起来。",
     "features": "核心功能",
@@ -12,9 +14,18 @@
     "feat2": "AI 辅助把原始内容整理成标准化题目",
     "feat3": "统一的做题、问 AI、进度追踪与目录导航体验",
     "feat4": "自动错题本与数据概览，支持回看、重做与持续复盘",
-    "tech": "技术栈",
-    "license": "许可证",
-    "licenseText": "本项目以 MIT 协议开源。Powered by Electron + React + DeepSeek。"
+    "version": {
+      "title": "版本状态",
+      "current": "当前版本",
+      "latest": "最新版本",
+      "status": "检查结果",
+      "upToDate": "已是最新",
+      "outdated": "发现新版本",
+      "unknown": "暂时无法判断",
+      "goLatest": "前往最新 Release",
+      "checkedAt": "最近检查：{{time}}",
+      "checkFailed": "版本检查未完成：{{error}}"
+    }
   },
   "nav": {
     "primary": "主要导航",
@@ -377,9 +388,43 @@
       "streak": "连续答对",
       "activeDays": "活跃天数"
     },
+    "profile": {
+      "title": "学习画像",
+      "summary": "{{archetype}}：最近 {{attempts}} 次作答覆盖 {{docs}} 份文档，活跃 {{activeDays}} 天，整体正确率 {{accuracy}}。",
+      "archetype": "当前学习型",
+      "window": "高频时段",
+      "focusDoc": "主攻文档",
+      "strongestType": "当前强项",
+      "weakestType": "当前短板",
+      "coverage": {
+        "label": "覆盖范围",
+        "single": "单文档深挖",
+        "multi": "{{count}} 份文档并行"
+      },
+      "archetypes": {
+        "steady": "稳定推进型",
+        "repair": "补漏强化型",
+        "deep": "单点深挖型",
+        "building": "节奏建立型"
+      },
+      "windows": {
+        "morning": "上午学习",
+        "afternoon": "下午学习",
+        "evening": "晚间学习",
+        "lateNight": "深夜学习"
+      }
+    },
     "typeBreakdown": {
       "title": "题型表现",
       "meta": "共 {{total}} 题 · 答对 {{correct}} 题 · 正确率 {{accuracy}}"
+    },
+    "heatmap": {
+      "title": "最近 4 周热力图",
+      "subtitle": "颜色越深表示当天练习越多，可以直接看出你的学习节奏是否稳定。",
+      "cell": "{{date}} · {{count}} 次作答 · 正确率 {{accuracy}}",
+      "noAccuracy": "暂无",
+      "less": "少",
+      "more": "多"
     },
     "dailyTrend": {
       "title": "近 7 天练习"

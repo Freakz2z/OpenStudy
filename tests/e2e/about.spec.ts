@@ -26,18 +26,40 @@ test.describe('「关于」页面', () => {
     await expect(brandCard.getByRole('heading', { name: 'OpenStudy' })).toBeVisible();
     // 标语
     await expect(brandCard).toContainText('Markdown-first 结构化题库与做题系统');
+    await expect(brandCard.getByRole('link', { name: 'GitHub 仓库' })).toHaveAttribute(
+      'href',
+      'https://github.com/Freakz2z/OpenStudy',
+    );
   });
 
-  test('显示产品理念 / 核心功能 / 技术栈 / 许可证 4 卡片', async ({ page }) => {
-    await installApiMock(page);
+  test('显示产品理念 / 核心功能 / 版本状态，并隐藏技术栈和许可证', async ({ page }) => {
+    await installApiMock(page, {
+      overrides: {
+        checkLatestRelease: `() => Promise.resolve({
+          currentVersion: '0.2.0',
+          latestVersion: '0.3.0',
+          upToDate: false,
+          checkedAt: Date.now(),
+          releaseUrl: 'https://github.com/Freakz2z/OpenStudy/releases/tag/v0.3.0',
+          error: null
+        })`,
+      },
+    });
     await page.goto('/#/about');
     await expect(page.getByRole('heading', { name: '产品理念' })).toBeVisible();
     await expect(page.getByRole('heading', { name: '核心功能' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: '技术栈' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: '许可证' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '版本状态' })).toBeVisible();
+    await expect(page.getByText('发现新版本')).toBeVisible();
+    await expect(page.getByRole('link', { name: '前往最新 Release' })).toHaveAttribute(
+      'href',
+      'https://github.com/Freakz2z/OpenStudy/releases/tag/v0.3.0',
+    );
+    await expect(page.getByRole('heading', { name: '技术栈' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: '许可证' })).toHaveCount(0);
+    await expect(page.getByText('Electron + React + TypeScript')).toHaveCount(0);
   });
 
-  test('英文模式下显示 About / Philosophy / Features / Tech / License', async ({ page }) => {
+  test('英文模式下显示 About / Philosophy / Features / Version status', async ({ page }) => {
     await installApiMock(page, {
       documents: [],
       questions: [],
@@ -49,8 +71,9 @@ test.describe('「关于」页面', () => {
     await expect(page.getByRole('heading', { name: 'About' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Philosophy' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Core Features' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'Tech Stack' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'License' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Version status' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Tech Stack' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'License' })).toHaveCount(0);
   });
 });
 

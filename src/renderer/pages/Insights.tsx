@@ -50,6 +50,13 @@ function buildRecentDays(days: number) {
   });
 }
 
+function getStudyWindowKey(hour: number): 'lateNight' | 'morning' | 'afternoon' | 'evening' {
+  if (hour >= 5 && hour < 12) return 'morning';
+  if (hour >= 12 && hour < 18) return 'afternoon';
+  if (hour >= 18 && hour < 23) return 'evening';
+  return 'lateNight';
+}
+
 function getQuestionTypeLabel(
   type: RecentAttemptDetail['question_type'],
   t: ReturnType<typeof useTranslation>['t'],
@@ -417,6 +424,10 @@ export default function Insights() {
       .slice(0, 6);
   }, [attempts]);
 
+  const activeDayCount = useMemo(() => {
+    return new Set(attempts.map((item) => startOfDay(item.attempted_at))).size;
+  }, [attempts]);
+
   const dailyTrend = useMemo(() => {
     const days = buildRecentDays(7);
     const map = new Map<number, { total: number; correct: number }>();
@@ -447,9 +458,71 @@ export default function Insights() {
     [dailyTrend],
   );
 
+  const strongestType = byType
+    .filter((item) => item.total >= 2)
+    .sort((a, b) => {
+      if (b.accuracy !== a.accuracy) return b.accuracy - a.accuracy;
+      return b.total - a.total;
+    })[0];
+
   const weakestType = byType
     .filter((item) => item.total >= 2)
     .sort((a, b) => a.accuracy - b.accuracy)[0];
+
+  const dominantStudyWindow = useMemo(() => {
+    const buckets = new Map<'lateNight' | 'morning' | 'afternoon' | 'evening', number>();
+    for (const item of attempts) {
+      const hour = new Date(item.attempted_at).getHours();
+      const key = getStudyWindowKey(hour);
+      buckets.set(key, (buckets.get(key) ?? 0) + 1);
+    }
+    return [...buckets.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'evening';
+  }, [attempts]);
+
+  const dominantDoc = byDoc[0] ?? null;
+
+  const profileArchetype = useMemo(() => {
+    if (activeDayCount >= 10 && (recentAccuracy ?? 0) >= 0.75) return 'steady';
+    if ((recentAccuracy ?? 0) < 0.6 && weakestType) return 'repair';
+    if (byDoc.length <= 1 && attempts.length >= 6) return 'deep';
+    return 'building';
+  }, [activeDayCount, attempts.length, byDoc.length, recentAccuracy, weakestType]);
+
+  const profileCoverage = byDoc.length <= 1
+    ? t('insights.profile.coverage.single')
+    : t('insights.profile.coverage.multi', { count: byDoc.length });
+
+  const heatmapDays = useMemo(() => {
+    const days = buildRecentDays(28);
+    const map = new Map<number, { total: number; correct: number }>();
+    for (const day of days) {
+      map.set(day, { total: 0, correct: 0 });
+    }
+    for (const item of attempts) {
+      const key = startOfDay(item.attempted_at);
+      const current = map.get(key);
+      if (!current) continue;
+      current.total += 1;
+      if (item.is_correct) current.correct += 1;
+    }
+    const maxTotal = Math.max(...days.map((day) => map.get(day)?.total ?? 0), 0);
+    return days.map((day) => {
+      const current = map.get(day) ?? { total: 0, correct: 0 };
+      const intensity = current.total === 0 || maxTotal === 0
+        ? 0
+        : Math.min(4, Math.max(1, Math.ceil((current.total / maxTotal) * 4)));
+      return {
+        day,
+        total: current.total,
+        accuracy: current.total > 0 ? current.correct / current.total : null,
+        label: new Date(day).toLocaleDateString(i18n.language, {
+          month: 'numeric',
+          day: 'numeric',
+        }),
+        intensity,
+      };
+    });
+  }, [attempts, i18n.language]);
 
   return (
     <div className="page insights-page">
@@ -512,7 +585,116 @@ export default function Insights() {
                 <div className="overview-metric-value">{currentStreak}</div>
               </div>
             </div>
+            <div className="card overview-metric-card">
+              <div className="overview-metric-icon"><BarChart3 size={18} /></div>
+              <div className="overview-metric-copy">
+                <div className="overview-metric-label">{t('insights.metrics.activeDays')}</div>
+                <div className="overview-metric-value">{activeDayCount}</div>
+              </div>
+            </div>
           </div>
+
+          <section className="card panel-card insights-profile-panel">
+            <div className="card-header">
+              <h2>{t('insights.profile.title')}</h2>
+            </div>
+            <div className="insights-profile-summary">
+              {t('insights.profile.summary', {
+                archetype: t(`insights.profile.archetypes.${profileArchetype}`),
+                attempts: attempts.length,
+                docs: byDoc.length,
+                activeDays: activeDayCount,
+                accuracy: formatPct(recentAccuracy),
+              })}
+            </div>
+            <div className="insights-profile-grid">
+              <div className="insights-profile-card">
+                <div className="tiny muted">{t('insights.profile.archetype')}</div>
+                <strong>{t(`insights.profile.archetypes.${profileArchetype}`)}</strong>
+              </div>
+              <div className="insights-profile-card">
+                <div className="tiny muted">{t('insights.profile.window')}</div>
+                <strong>{t(`insights.profile.windows.${dominantStudyWindow}`)}</strong>
+              </div>
+              <div className="insights-profile-card">
+                <div className="tiny muted">{t('insights.profile.focusDoc')}</div>
+                <strong>{dominantDoc?.title ?? t('insights.focus.none')}</strong>
+              </div>
+              <div className="insights-profile-card">
+                <div className="tiny muted">{t('insights.profile.coverage.label')}</div>
+                <strong>{profileCoverage}</strong>
+              </div>
+              <div className="insights-profile-card">
+                <div className="tiny muted">{t('insights.profile.strongestType')}</div>
+                <strong>
+                  {strongestType
+                    ? getQuestionTypeLabel(
+                        strongestType.type as RecentAttemptDetail['question_type'],
+                        t,
+                      )
+                    : t('insights.focus.none')}
+                </strong>
+              </div>
+              <div className="insights-profile-card">
+                <div className="tiny muted">{t('insights.profile.weakestType')}</div>
+                <strong>
+                  {weakestType
+                    ? getQuestionTypeLabel(
+                        weakestType.type as RecentAttemptDetail['question_type'],
+                        t,
+                      )
+                    : t('insights.focus.none')}
+                </strong>
+              </div>
+            </div>
+          </section>
+
+          <section className="card panel-card insights-heatmap-panel">
+            <div className="card-header">
+              <h2>{t('insights.heatmap.title')}</h2>
+            </div>
+            <p className="overview-list-meta insights-heatmap-subtitle">
+              {t('insights.heatmap.subtitle')}
+            </p>
+            <div className="insights-heatmap" data-testid="insights-heatmap">
+              {heatmapDays.map((item) => (
+                <div
+                  key={item.day}
+                  className={`insights-heatmap-cell level-${item.intensity}`}
+                  title={t('insights.heatmap.cell', {
+                    date: item.label,
+                    count: item.total,
+                    accuracy:
+                      item.accuracy == null
+                        ? t('insights.heatmap.noAccuracy')
+                        : formatPct(item.accuracy),
+                  })}
+                >
+                  <span className="sr-only">
+                    {t('insights.heatmap.cell', {
+                      date: item.label,
+                      count: item.total,
+                      accuracy:
+                        item.accuracy == null
+                          ? t('insights.heatmap.noAccuracy')
+                          : formatPct(item.accuracy),
+                    })}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="insights-heatmap-legend">
+              <span>{t('insights.heatmap.less')}</span>
+              {[0, 1, 2, 3, 4].map((level) => (
+                <span
+                  key={level}
+                  className={`insights-heatmap-legend-swatch level-${level}`}
+                  aria-hidden="true"
+                />
+              ))}
+              <span>{t('insights.heatmap.more')}</span>
+            </div>
+          </section>
 
           <div className="insights-grid">
             <section className="card panel-card">
