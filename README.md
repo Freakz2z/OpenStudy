@@ -27,8 +27,6 @@
   <img src=".github/assets/openstudy-workflow.gif" alt="OpenStudy real workflow demo from importing Markdown to practice, Ask AI, Wrong Book, and Insights" width="100%">
 </p>
 
-<p align="center"><em>A real workflow GIF: import Markdown, review the source, practice, Ask AI, redo from Wrong Book, and finish in Insights.</em></p>
-
 ## Why OpenStudy
 
 OpenStudy is built around a very specific frustration: we already have the notes, the excerpts, and the question drafts, but turning them into a repeatable practice system still feels too manual.
@@ -59,6 +57,14 @@ Instead of treating a Markdown note set as a dead asset, OpenStudy turns it into
 4. **Close the loop**: revisit mistakes in Wrong Book and generate Insights manually when you are ready to reflect.
 
 The GIF above walks through the exact README demo flow: `Import Markdown -> Edit Source -> Practice -> Ask AI -> Wrong Book -> Redo -> Insights`.
+
+## Workflow Map
+
+<p align="center">
+  <img src=".github/assets/usage-flow.png" alt="OpenStudy workflow map for Markdown import, question cleanup, deliberate practice, wrong-book review, and manual insights" width="100%">
+</p>
+
+This static map complements the GIF above and summarizes the Markdown-first study loop in one glance.
 
 ## Standards
 
