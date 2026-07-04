@@ -107,6 +107,10 @@ const api = {
     ipcRenderer.invoke('llm:testModel', payload),
   generateStudyInsights: (payload: StudyInsightsRequest): Promise<StudyInsightsResult> =>
     ipcRenderer.invoke('llm:studyInsights', payload),
+  installSkill: (): Promise<{ ok: boolean; path: string }> =>
+    ipcRenderer.invoke('app:installSkill'),
+  openCliPage: (): Promise<{ ok: boolean }> =>
+    ipcRenderer.invoke('app:openCliPage'),
 };
 
 contextBridge.exposeInMainWorld('api', api);

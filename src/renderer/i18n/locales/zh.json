@@ -25,6 +25,14 @@
       "goLatest": "前往最新 Release",
       "checkedAt": "最近检查：{{time}}",
       "checkFailed": "版本检查未完成：{{error}}"
+    },
+    "install": {
+      "title": "安装扩展",
+      "description": "安装 CLI 命令行工具和 Claude Code Skill，在终端和 AI 中直接使用 OpenStudy。",
+      "skillBtn": "安装 Skill",
+      "skillInstalling": "安装中...",
+      "skillDone": "Skill 已安装",
+      "cliBtn": "获取 CLI"
     }
   },
   "nav": {
@@ -94,6 +102,7 @@
     "clearAll": "清空日志",
     "clearing": "清空中…",
     "clearConfirm": "确定清空所有识别日志吗？",
+    "emptyForDoc": "本文档暂无识别日志",
     "summary": {
       "success": "成功 {{count}}",
       "failed": "失败 {{count}}",
@@ -115,14 +124,18 @@
     "actions": {
       "identify": "识别题目",
       "identifying": "识别中…",
-      "edit": "编辑文件",
+      "edit": "识别题目",
       "practice": "做题",
+      "exam": "考试",
       "delete": "删除",
       "deleting": "删除中…",
       "reset": "重置进度",
       "createDoc": "新建文档",
       "rename": "重命名",
-      "editMeta": "编辑信息"
+      "editMeta": "编辑信息",
+      "viewRecords": "查看做题记录",
+      "wrongBook": "错题 ({{count}})",
+      "conversations": "AI对话 ({{count}})"
     },
     "create": {
       "title": "新建文档",
@@ -322,6 +335,40 @@
       "exported": "考试记录已导出",
       "copied": "考试记录已复制到剪贴板",
       "docLabel": "文档 #{{id}}"
+    }
+  },
+  "records": {
+    "title": "做题记录",
+    "loading": "正在加载做题记录…",
+    "empty": "还没有做题记录",
+    "emptyHint": "开始做题后，这里会显示每道题的答题记录。",
+    "back": "返回题库",
+    "summary": {
+      "correct": "正确 {{count}}",
+      "wrong": "错误 {{count}}",
+      "unattempted": "未作答 {{count}}",
+      "accuracy": "正确率 {{pct}}",
+      "total": "共 {{count}} 题"
+    },
+    "status": {
+      "correct": "回答正确",
+      "wrong": "回答错误",
+      "unattempted": "未作答"
+    },
+    "yourAnswer": "你的答案",
+    "reference": "参考答案",
+    "explanation": "解析",
+    "copyMarkdown": "复制为 Markdown",
+    "exportMarkdown": "导出做题记录",
+    "copied": "已复制到剪贴板",
+    "exported": "做题记录已导出",
+    "prev": "上一题",
+    "next": "下一题",
+    "nav": {
+      "label": "题目导航",
+      "correct": "正确",
+      "wrong": "错误",
+      "unanswered": "未作答"
     }
   },
   "wrongbook": {
@@ -565,7 +612,7 @@
     }
   },
   "markdownEditor": {
-    "title": "编辑原文件",
+    "title": "识别题目和编辑文件",
     "loading": "正在加载原文件…",
     "edit": "编辑",
     "preview": "预览",
@@ -590,7 +637,9 @@
       "explanations": "解析行 {{count}}",
       "noIssues": "暂未发现明显结构问题，可以直接继续识别。"
     },
-    "hint": "💡 提示：编辑后点「识别题目」会用你编辑的版本。"
+    "hint": "💡 提示：编辑后点「识别题目」会用你编辑的版本。",
+    "tabEdit": "编辑",
+    "identifyHint": "使用 AI 从 Markdown 中识别并结构化题目。识别前请确保 Markdown 格式清晰。"
   },
   "common": {
     "back": "返回",
@@ -612,6 +661,7 @@
   "conversations": {
     "title": "对话记录",
     "empty": "还没有对话记录。",
+    "emptyForDoc": "此文档下没有对话记录。",
     "emptyHint": "在做题页向 AI 提问后，这里会保留每道题的历史对话。",
     "docFallback": "文档 #{{id}}",
     "docCount": "{{count}} 段对话",

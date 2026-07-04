@@ -48,9 +48,9 @@ export function Toast({ toast, onDismiss }: ToastProps) {
       aria-live={ariaLive}
       onMouseEnter={onMouseEnter}
     >
-      <div className="row" style={{ width: '100%' }}>
+      <div className="row w-full">
         <Icon size={18} />
-        <div style={{ flex: 1 }}>{toast.message}</div>
+        <div className="flex-1">{toast.message}</div>
         {toast.action && (
           <button className="ghost" onClick={toast.action.onClick}>
             {toast.action.label}

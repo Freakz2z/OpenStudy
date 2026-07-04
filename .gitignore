@@ -12,4 +12,15 @@ build
 test-results
 playwright-report
 tmp
+.tmp
 dist-artifacts
+
+# Local-only test data and diagnostics
+test-data/
+tests/e2e/_*.spec.ts
+scripts/visual-audit.ts
+*.bak
+
+# Local project guidance
+CLAUDE.md
+CODE_OF_CONDUCT.md

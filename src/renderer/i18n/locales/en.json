@@ -25,6 +25,14 @@
       "goLatest": "Open latest release",
       "checkedAt": "Last checked: {{time}}",
       "checkFailed": "Version check failed: {{error}}"
+    },
+    "install": {
+      "title": "Install Extras",
+      "description": "Install the CLI tool and Claude Code Skill to use OpenStudy from the terminal and AI.",
+      "skillBtn": "Install Skill",
+      "skillInstalling": "Installing...",
+      "skillDone": "Skill Installed",
+      "cliBtn": "Get CLI"
     }
   },
   "nav": {
@@ -94,6 +102,7 @@
     "clearAll": "Clear logs",
     "clearing": "Clearing…",
     "clearConfirm": "Clear all identification logs?",
+    "emptyForDoc": "No identification logs for this document",
     "summary": {
       "success": "Success {{count}}",
       "failed": "Failed {{count}}",
@@ -115,14 +124,18 @@
     "actions": {
       "identify": "Identify",
       "identifying": "Identifying…",
-      "edit": "Edit File",
+      "edit": "Identify",
       "practice": "Practice",
+      "exam": "Exam",
       "delete": "Delete",
       "deleting": "Deleting…",
       "reset": "Reset progress",
       "createDoc": "New Document",
       "rename": "Rename",
-      "editMeta": "Edit Info"
+      "editMeta": "Edit Info",
+      "viewRecords": "View Records",
+      "wrongBook": "Wrong ({{count}})",
+      "conversations": "Chats ({{count}})"
     },
     "create": {
       "title": "New Document",
@@ -322,6 +335,40 @@
       "exported": "Exam results exported",
       "copied": "Exam results copied to clipboard",
       "docLabel": "Doc #{{id}}"
+    }
+  },
+  "records": {
+    "title": "Practice Records",
+    "loading": "Loading practice records…",
+    "empty": "No practice records yet",
+    "emptyHint": "Start practicing to see your attempt history here.",
+    "back": "Back to Library",
+    "summary": {
+      "correct": "Correct {{count}}",
+      "wrong": "Wrong {{count}}",
+      "unattempted": "Unattempted {{count}}",
+      "accuracy": "Accuracy {{pct}}",
+      "total": "{{count}} questions"
+    },
+    "status": {
+      "correct": "Correct",
+      "wrong": "Wrong",
+      "unattempted": "Not attempted"
+    },
+    "yourAnswer": "Your answer",
+    "reference": "Reference answer",
+    "explanation": "Explanation",
+    "copyMarkdown": "Copy as Markdown",
+    "exportMarkdown": "Export Records",
+    "copied": "Copied to clipboard",
+    "exported": "Records exported",
+    "prev": "Previous",
+    "next": "Next",
+    "nav": {
+      "label": "Question Nav",
+      "correct": "Correct",
+      "wrong": "Wrong",
+      "unanswered": "Unanswered"
     }
   },
   "wrongbook": {
@@ -565,7 +612,7 @@
     }
   },
   "markdownEditor": {
-    "title": "Edit Source",
+    "title": "Identify & Edit",
     "loading": "Loading source…",
     "edit": "Edit",
     "preview": "Preview",
@@ -590,7 +637,9 @@
       "explanations": "Explanation lines {{count}}",
       "noIssues": "No obvious structure issues found. You can continue identifying questions."
     },
-    "hint": "Tip: After editing, click \"Identify\" and it will use your edited version."
+    "hint": "Tip: After editing, click \"Identify\" and it will use your edited version.",
+    "tabEdit": "Edit",
+    "identifyHint": "Use AI to identify and structure questions from Markdown. Make sure the Markdown format is clear before running."
   },
   "common": {
     "back": "Back",
@@ -612,6 +661,7 @@
   "conversations": {
     "title": "Conversations",
     "empty": "No conversation history yet.",
+    "emptyForDoc": "No conversations for this document.",
     "emptyHint": "Once you ask AI during practice, each question's chat history will appear here.",
     "docFallback": "Document #{{id}}",
     "docCount": "{{count}} conversations",

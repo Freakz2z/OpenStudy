@@ -13,6 +13,7 @@ import type { Document, DocumentStats, OverallStats, WrongQuestion } from '@shar
 import { EmptyState } from '../components/EmptyState';
 import { LoadingState } from '../components/LoadingState';
 import { PageHeader } from '../components/PageHeader';
+import { formatPct } from '../utils/helpers';
 
 type MetricTone = 'default' | 'primary' | 'success' | 'warning';
 
@@ -35,11 +36,6 @@ function MetricCard({ icon: Icon, label, value, tone = 'default' }: MetricCardPr
       </div>
     </div>
   );
-}
-
-function formatPct(value: number | null | undefined): string {
-  if (value == null) return '—';
-  return `${Math.round(value * 100)}%`;
 }
 
 export default function Overview() {

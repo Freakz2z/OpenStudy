@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowUpRight, BookOpen, Globe, RefreshCw, Sparkles } from 'lucide-react';
+import { ArrowUpRight, BookOpen, Download, Globe, RefreshCw, Sparkles, Terminal } from 'lucide-react';
 import type { AppMeta, AppVersionInfo } from '@shared/types';
 import { BrandLogo } from '../components/BrandLogo';
 import { PageHeader } from '../components/PageHeader';
@@ -11,7 +11,7 @@ const FALLBACK_RELEASE_API = 'https://api.github.com/repos/Freakz2z/OpenStudy/re
 const FALLBACK_APP_VERSION = import.meta.env.VITE_APP_VERSION || '0.2.1';
 
 type AboutCompatApi = Partial<
-  Pick<typeof window.api, 'getAppMeta' | 'checkLatestRelease'>
+  Pick<typeof window.api, 'getAppMeta' | 'checkLatestRelease' | 'installSkill' | 'openCliPage'>
 >;
 
 function getAboutApi(): AboutCompatApi {
@@ -95,6 +95,34 @@ export default function About() {
   const [meta, setMeta] = useState<AppMeta | null>(() => buildFallbackMeta('OpenStudy'));
   const [versionInfo, setVersionInfo] = useState<AppVersionInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [installingSkill, setInstallingSkill] = useState(false);
+  const [skillInstalled, setSkillInstalled] = useState(false);
+
+  async function handleInstallSkill() {
+    setInstallingSkill(true);
+    try {
+      const api = getAboutApi();
+      const result = await (api.installSkill?.() ?? Promise.reject(new Error('not available')));
+      if (result.ok) {
+        setSkillInstalled(true);
+      }
+    } catch (e) {
+      console.error('Failed to install skill:', e);
+    } finally {
+      setInstallingSkill(false);
+    }
+  }
+
+  function handleOpenCliPage() {
+    const api = getAboutApi();
+    api.openCliPage?.()?.catch(() => {
+      window.open('https://github.com/Freakz2z/OpenStudy/releases', '_blank');
+    });
+  }
+
+  function handleOpenRelease(url: string) {
+    window.open(url, '_blank');
+  }
 
   async function load(force = false) {
     setLoading(true);
@@ -149,9 +177,9 @@ export default function About() {
 
       <div className="card about-brand">
         <BrandLogo alt="OpenStudy" className="about-brand-logo" />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <h2 style={{ margin: 0 }}>{meta?.name ?? t('app.name')}</h2>
-          <div className="muted" style={{ marginTop: 4 }}>
+        <div className="flex-1" style={{ minWidth: 0 }}>
+          <h2>{meta?.name ?? t('app.name')}</h2>
+          <div className="muted mt-xs">
             {t('app.tagline')}
           </div>
           <div className="about-meta-row">
@@ -170,9 +198,9 @@ export default function About() {
       </div>
 
       <div className="card about-version-card">
-        <div className="row gap-sm" style={{ marginBottom: 10 }}>
+        <div className="row gap-sm mb-sm">
           <Sparkles size={18} />
-          <h2 style={{ margin: 0 }}>{t('about.version.title')}</h2>
+          <h2>{t('about.version.title')}</h2>
         </div>
         <div className="about-version-grid">
           <div>
@@ -195,46 +223,77 @@ export default function About() {
           </div>
         </div>
         {checkedAtText && (
-          <div className="tiny muted" style={{ marginTop: 10 }}>
+          <div className="tiny muted mt-md">
             {t('about.version.checkedAt', { time: checkedAtText })}
           </div>
         )}
         {versionInfo?.error && (
-          <div className="tiny muted" style={{ marginTop: 8 }}>
+          <div className="tiny muted mt-sm">
             {t('about.version.checkFailed', { error: versionInfo.error })}
           </div>
         )}
         {versionInfo?.upToDate === false && (
           <div className="about-version-actions">
-            <a
-              href={versionInfo.releaseUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="button-link primary"
+            <button
+              className="primary lg"
+              onClick={() => handleOpenRelease(versionInfo.releaseUrl)}
             >
               <ArrowUpRight size={16} />
               <span>{t('about.version.goLatest')}</span>
-            </a>
+            </button>
           </div>
         )}
       </div>
 
       <div className="card">
-        <div className="row gap-sm" style={{ marginBottom: 10 }}>
-          <Sparkles size={18} />
-          <h2 style={{ margin: 0 }}>{t('about.philosophy')}</h2>
+        <div className="row gap-sm mb-sm">
+          <Download size={18} />
+          <h2>{t('about.install.title')}</h2>
         </div>
-        <p style={{ color: 'var(--fg-muted)', lineHeight: 1.7 }}>
+        <p className="muted mb-md">
+          {t('about.install.description')}
+        </p>
+        <div className="about-install-row">
+          <button
+            className="primary lg"
+            onClick={() => void handleInstallSkill()}
+            disabled={installingSkill || skillInstalled}
+          >
+            <Sparkles size={16} />
+            <span>
+              {skillInstalled
+                ? t('about.install.skillDone')
+                : installingSkill
+                  ? t('about.install.skillInstalling')
+                  : t('about.install.skillBtn')}
+            </span>
+          </button>
+          <button
+            className="lg"
+            onClick={() => handleOpenCliPage()}
+          >
+            <Terminal size={16} />
+            <span>{t('about.install.cliBtn')}</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="row gap-sm mb-sm">
+          <Sparkles size={18} />
+          <h2>{t('about.philosophy')}</h2>
+        </div>
+        <p className="muted">
           {t('about.philosophyText')}
         </p>
       </div>
 
       <div className="card">
-        <div className="row gap-sm" style={{ marginBottom: 10 }}>
+        <div className="row gap-sm mb-sm">
           <BookOpen size={18} />
-          <h2 style={{ margin: 0 }}>{t('about.features')}</h2>
+          <h2>{t('about.features')}</h2>
         </div>
-        <ul style={{ margin: 0, paddingLeft: 20, color: 'var(--fg-muted)', lineHeight: 1.8 }}>
+        <ul className="muted about-features-list">
           <li>{t('about.feat1')}</li>
           <li>{t('about.feat2')}</li>
           <li>{t('about.feat3')}</li>

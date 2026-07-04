@@ -6,13 +6,10 @@ import type {
 import { NavLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  AlertCircle,
   BarChart3,
   BookOpen,
   FileText,
   Info,
-  MessageSquare,
-  ScrollText,
   Sparkles,
   Settings as SettingsIcon,
 } from 'lucide-react';
@@ -25,9 +22,6 @@ export default function Sidebar() {
     { to: '/overview', icon: BarChart3, label: t('nav.overview') },
     { to: '/insights', icon: Sparkles, label: t('nav.insights') },
     { to: '/library', icon: BookOpen, label: t('nav.library') },
-    { to: '/wrong', icon: AlertCircle, label: t('nav.wrongbook') },
-    { to: '/conversations', icon: MessageSquare, label: t('nav.conversations') },
-    { to: '/logs', icon: ScrollText, label: t('nav.logs') },
   ]), [t]);
 
   const secondaryNav = useMemo(() => ([
@@ -98,7 +92,7 @@ export default function Sidebar() {
             to={to}
             className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
           >
-            <Icon size={16} />
+            <Icon size={18} />
             <span>{label}</span>
           </NavLink>
         ))}
@@ -111,7 +105,7 @@ export default function Sidebar() {
             to={to}
             className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
           >
-            <Icon size={16} />
+            <Icon size={18} />
             <span>{label}</span>
           </NavLink>
         ))}
@@ -123,7 +117,7 @@ export default function Sidebar() {
             to="/settings"
             className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
           >
-            <SettingsIcon size={16} />
+            <SettingsIcon size={18} />
             <span>{t('nav.settings')}</span>
           </NavLink>
         </div>
@@ -132,7 +126,7 @@ export default function Sidebar() {
           to="/about"
           className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
         >
-          <Info size={16} />
+          <Info size={18} />
           <span>{t('nav.about')}</span>
         </NavLink>
       </div>

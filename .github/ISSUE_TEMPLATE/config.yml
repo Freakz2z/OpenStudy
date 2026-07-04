@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Read the README
-    url: https://github.com/Freakz3z/OpenStudy/blob/HEAD/README.md
+    url: https://github.com/Freakz2z/OpenStudy/blob/HEAD/README.md
     about: Start here for product overview, setup, and packaging information.
   - name: Contributing Guide
-    url: https://github.com/Freakz3z/OpenStudy/blob/HEAD/CONTRIBUTING.md
+    url: https://github.com/Freakz2z/OpenStudy/blob/HEAD/CONTRIBUTING.md
     about: Please read this before opening larger feature PRs or collaboration-heavy changes.

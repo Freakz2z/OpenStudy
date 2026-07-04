@@ -237,7 +237,7 @@ export default function Templates() {
   }
 
   return (
-    <div>
+    <div className="page">
       <PageHeader
         title={t('templates.title')}
         actions={
@@ -262,26 +262,14 @@ export default function Templates() {
         }
       />
 
-      <div className="card" style={{ marginBottom: 16 }}>
+      <div className="card mb-lg">
         <div className="card-header">
           <div className="row gap-sm">
             <Languages size={18} />
-            <h2 style={{ margin: 0 }}>{t('templates.standardTitle')}</h2>
+            <h2>{t('templates.standardTitle')}</h2>
           </div>
         </div>
-        <pre
-          style={{
-            background: 'var(--bg-subtle)',
-            borderRadius: 'var(--radius)',
-            padding: '14px 18px',
-            fontSize: '0.85em',
-            overflow: 'auto',
-            whiteSpace: 'pre-wrap',
-            fontFamily: 'var(--font-mono)',
-            lineHeight: 1.7,
-            margin: 0,
-          }}
-        >
+        <pre className="template-code">
           {buildStandardGuide(currentLang)}
         </pre>
       </div>
@@ -294,7 +282,7 @@ export default function Templates() {
               <div className="card-header">
                 <div className="row gap-sm">
                   <Icon size={18} />
-                  <h2 style={{ margin: 0 }}>{item.title}</h2>
+                  <h2>{item.title}</h2>
                 </div>
                 <button
                   className={copied === item.id ? 'primary icon-only' : 'ghost icon-only'}
@@ -305,20 +293,7 @@ export default function Templates() {
                   <Copy size={16} />
                 </button>
               </div>
-              <pre
-                style={{
-                  background: 'var(--bg-subtle)',
-                  borderRadius: 'var(--radius)',
-                  padding: '14px 18px',
-                  fontSize: '0.85em',
-                  maxHeight: 480,
-                  overflow: 'auto',
-                  whiteSpace: 'pre-wrap',
-                  fontFamily: 'var(--font-mono)',
-                  lineHeight: 1.7,
-                  margin: 0,
-                }}
-              >
+              <pre className="template-code" style={{ maxHeight: 480 }}>
                 {item.markdown}
               </pre>
             </div>

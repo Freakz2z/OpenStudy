@@ -315,7 +315,7 @@ export default function QuestionEditor() {
         title={
           <>
             {t('editor.title')}
-            <span className="muted" style={{ fontSize: 14, fontWeight: 'normal' }}>
+            <span className="page-subtitle muted">
               {' · '}
               {docTitle || `#${docId}`}
             </span>
@@ -340,7 +340,7 @@ export default function QuestionEditor() {
       />
 
       {error && (
-        <div className="card error" role="alert" style={{ marginBottom: 12 }}>
+        <div className="card error mb-md" role="alert">
           <div className="row gap-sm">
             <AlertTriangle size={16} />
             <span>{error}</span>

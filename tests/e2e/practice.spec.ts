@@ -128,9 +128,10 @@ test.describe('Practice 页面', () => {
       const practicePage = document.querySelector('.practice-page') as HTMLElement | null;
       const main = document.querySelector('.practice-main') as HTMLElement | null;
       const drawer = document.querySelector('.practice-ai-drawer') as HTMLElement | null;
+      const content = document.querySelector('.practice-question-content') as HTMLElement | null;
       const thread = document.querySelector('.practice-ai-thread') as HTMLElement | null;
       const askButton = document.querySelector('.practice-ai-composer button') as HTMLElement | null;
-      if (!practicePage || !main || !drawer || !thread || !askButton) return null;
+      if (!practicePage || !main || !drawer || !content || !thread || !askButton) return null;
 
       const pageRect = practicePage.getBoundingClientRect();
       const mainRect = main.getBoundingClientRect();
@@ -138,6 +139,7 @@ test.describe('Practice 页面', () => {
       const askButtonRect = askButton.getBoundingClientRect();
       const pageStyle = getComputedStyle(practicePage);
       const mainStyle = getComputedStyle(main);
+      const contentStyle = getComputedStyle(content);
       const threadStyle = getComputedStyle(thread);
 
       return {
@@ -154,8 +156,9 @@ test.describe('Practice 页面', () => {
         askButtonRight: askButtonRect.right,
         topDiff: Math.abs(drawerRect.top - mainRect.top),
         mainOverflowY: mainStyle.overflowY,
+        contentOverflowY: contentStyle.overflowY,
         threadOverflowY: threadStyle.overflowY,
-        mainCanScroll: main.scrollHeight > main.clientHeight,
+        contentCanScroll: content.scrollHeight > content.clientHeight,
         threadCanScroll: thread.scrollHeight > thread.clientHeight,
       };
     });
@@ -168,7 +171,8 @@ test.describe('Practice 页面', () => {
     expect(metrics?.drawerRight).toBeLessThanOrEqual((metrics?.stageRight ?? 0) + 1);
     expect(metrics?.askButtonRight).toBeLessThanOrEqual((metrics?.drawerRight ?? 0) - 1);
     expect(metrics?.topDiff).toBeLessThan(1);
-    expect(['auto', 'scroll']).toContain(metrics?.mainOverflowY ?? '');
+    expect(['hidden', 'clip']).toContain(metrics?.mainOverflowY ?? '');
+    expect(['auto', 'scroll']).toContain(metrics?.contentOverflowY ?? '');
     expect(['auto', 'scroll']).toContain(metrics?.threadOverflowY ?? '');
   });
 
@@ -232,5 +236,61 @@ test.describe('Practice 页面', () => {
     await expect(page.getByRole('button', { name: '提交' })).toBeVisible();
     await expect(page.getByRole('button', { name: '答案' })).toBeVisible();
     await expect(page.getByRole('button', { name: '下一题' })).toBeVisible();
+  });
+
+  test('长选项不会被操作区遮挡，做题与考试页面会用满底部空间', async ({ page }) => {
+    const longQuestion = {
+      ...sampleQuestions[0],
+      options: Array.from(
+        { length: 12 },
+        (_, index) => `${String.fromCharCode(65 + index)}. 这是用于验证滚动布局的较长选项 ${index + 1}`,
+      ),
+    };
+
+    await installApiMock(page, {
+      questions: [longQuestion],
+      documents: [],
+    });
+
+    for (const path of ['/#/practice/2', '/#/exam/2']) {
+      await page.goto(path);
+
+      const content = page.locator('.practice-question-content');
+      const actionRow = page.locator(path.includes('exam') ? '.exam-submit-row' : '.practice-submit-row');
+      await content.evaluate((element) => {
+        element.scrollTop = element.scrollHeight;
+      });
+
+      const metrics = await page.evaluate(({ isExam }) => {
+        const appMain = document.querySelector('#app-main') as HTMLElement;
+        const practicePage = document.querySelector('.practice-page-active') as HTMLElement;
+        const content = document.querySelector('.practice-question-content') as HTMLElement;
+        const actionRow = document.querySelector(
+          isExam ? '.exam-submit-row' : '.practice-submit-row',
+        ) as HTMLElement;
+        const lastOption = document.querySelector('.practice-option:last-child') as HTMLElement;
+        const appMainRect = appMain.getBoundingClientRect();
+        const pageRect = practicePage.getBoundingClientRect();
+        const contentRect = content.getBoundingClientRect();
+        const actionRect = actionRow.getBoundingClientRect();
+        const lastOptionRect = lastOption.getBoundingClientRect();
+        const mainStyle = getComputedStyle(appMain);
+
+        return {
+          gapToAvailableBottom: Math.abs(
+            appMainRect.bottom - Number.parseFloat(mainStyle.paddingBottom) - pageRect.bottom,
+          ),
+          actionStartsAfterContent: actionRect.top >= contentRect.bottom - 1,
+          lastOptionAboveActions: lastOptionRect.bottom <= actionRect.top + 1,
+          contentCanScroll: content.scrollHeight > content.clientHeight,
+        };
+      }, { isExam: path.includes('exam') });
+
+      expect(metrics.gapToAvailableBottom).toBeLessThanOrEqual(1);
+      expect(metrics.actionStartsAfterContent).toBe(true);
+      expect(metrics.lastOptionAboveActions).toBe(true);
+      expect(metrics.contentCanScroll).toBe(true);
+      await expect(actionRow).toBeVisible();
+    }
   });
 });

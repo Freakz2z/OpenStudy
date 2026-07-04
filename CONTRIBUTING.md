@@ -90,7 +90,7 @@ Feature requests are welcome, especially when they include:
 
 ## Community Expectations
 
-Please be respectful, specific, and collaborative. If you are unsure about tone or behavior expectations, follow [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+Please be respectful, specific, and collaborative in all project discussions.
 
 ## Simplified Chinese
 

@@ -318,6 +318,7 @@ code, kbd, pre, .mono {
 .text-error { color: var(--danger); }
 .text-success { color: var(--success); }
 .text-warning { color: var(--warning); }
+.text-danger { color: var(--danger); }
 .text-primary { color: var(--primary); }
 
 .row {
@@ -349,9 +350,12 @@ code, kbd, pre, .mono {
 .mt-md { margin-top: var(--space-3); }
 .mt-lg { margin-top: var(--space-4); }
 .mt-xl { margin-top: var(--space-6); }
+.mb-xs { margin-bottom: var(--space-1); }
+.mb-sm { margin-bottom: var(--space-2); }
 .mb-md { margin-bottom: var(--space-3); }
 .mb-lg { margin-bottom: var(--space-4); }
 .mb-xl { margin-bottom: var(--space-6); }
+.w-full { width: 100%; }
 
 .tiny {
   font-size: var(--text-xs);
@@ -550,7 +554,7 @@ select:focus {
 }
 
 textarea {
-  resize: vertical;
+  resize: none;
   font-family: inherit;
   line-height: var(--leading-relaxed);
 }
@@ -615,13 +619,13 @@ label {
 .sidebar-nav a {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   min-height: 40px;
   padding: 9px 12px;
   color: var(--fg-muted);
   text-decoration: none;
   border-radius: 12px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   transition: background var(--duration-fast) var(--ease-out),
     color var(--duration-fast) var(--ease-out),
@@ -1506,6 +1510,39 @@ label {
   margin-top: 14px;
 }
 
+.about-install-row {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.about-features-list {
+  padding-left: 20px;
+  line-height: 1.8;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  font-weight: normal;
+}
+
+.markdown-editor-textarea {
+  width: 100%;
+  min-height: 480px;
+  margin-top: var(--space-3);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.markdown-editor-preview {
+  min-height: 480px;
+  margin-top: var(--space-3);
+  white-space: pre-wrap;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
 .button-link {
   display: inline-flex;
   align-items: center;
@@ -1533,7 +1570,8 @@ label {
 }
 
 .practice-page-active {
-  height: calc(100vh - var(--header-h) - 80px);
+  height: calc(100vh - 80px);
+  height: calc(100dvh - 80px);
   min-height: 0;
   overflow: hidden;
 }
@@ -1604,7 +1642,8 @@ label {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 24px 28px 0;
-  overflow: auto;
+  overflow: hidden;
+  overflow-x: hidden;
   min-height: 0;
   height: 100%;
   max-height: none;
@@ -1802,6 +1841,10 @@ label {
   flex-direction: column;
   gap: 0;
   min-height: 100%;
+  height: 100%;
+  overflow: hidden;
+  overflow-x: hidden;
+  max-width: 100%;
 }
 
 .practice-question-content {
@@ -1810,6 +1853,12 @@ label {
   gap: 16px;
   flex: 1;
   min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 20px;
+  scrollbar-gutter: stable;
+  max-width: 100%;
+  overscroll-behavior-inline: none;
 }
 
 .practice-question-meta {
@@ -1821,13 +1870,61 @@ label {
 
 .practice-question-stem {
   white-space: pre-wrap;
-  font-size: var(--text-lg);
+  overflow-wrap: anywhere;
+  max-width: 100%;
+  font-size: var(--text-xl);
   line-height: var(--leading-relaxed);
   font-weight: 600;
 }
 
+.practice-question-stem.markdown-content,
+.practice-option-text.markdown-content {
+  overflow-x: hidden;
+  white-space: normal;
+}
+
+.practice-question-stem.markdown-content h1,
+.practice-question-stem.markdown-content h2,
+.practice-question-stem.markdown-content h3,
+.practice-question-stem.markdown-content h4,
+.practice-question-stem.markdown-content h5,
+.practice-question-stem.markdown-content h6 {
+  margin: 0 0 0.55em;
+  font-size: 1em;
+  line-height: inherit;
+}
+
+.practice-question-stem.markdown-content p,
+.practice-question-stem.markdown-content ul,
+.practice-question-stem.markdown-content ol,
+.practice-question-stem.markdown-content pre,
+.practice-question-stem.markdown-content blockquote,
+.practice-question-stem.markdown-content table {
+  margin-bottom: 0.65em;
+}
+
+.practice-question-stem.markdown-content pre,
+.practice-option-text.markdown-content pre {
+  overflow-x: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.practice-question-stem.markdown-content table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.practice-question-stem.markdown-content img,
+.practice-option-text.markdown-content img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
 .practice-question-stem.is-code {
-  font-size: var(--text-md);
+  font-size: var(--text-lg);
   font-family: var(--font-mono);
 }
 
@@ -1897,7 +1994,7 @@ label {
 
 .practice-option.is-code {
   font-family: var(--font-mono);
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
 }
 
 .practice-option-letter {
@@ -1910,7 +2007,7 @@ label {
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   flex-shrink: 0;
   transition: background var(--duration-fast) var(--ease-out),
     color var(--duration-fast) var(--ease-out);
@@ -1941,6 +2038,13 @@ label {
   min-width: 0;
   white-space: pre-wrap;
   word-break: break-word;
+  overflow-wrap: anywhere;
+  font-size: var(--text-md);
+}
+
+.practice-option-text.markdown-content > :first-child,
+.practice-option-text.markdown-content > :last-child {
+  margin-bottom: 0;
 }
 
 .practice-option input[type='radio'],
@@ -1964,7 +2068,7 @@ label {
 
 .practice-result-status {
   font-weight: 700;
-  font-size: var(--text-md);
+  font-size: var(--text-lg);
 }
 
 .practice-result-block {
@@ -1980,12 +2084,16 @@ label {
   gap: 12px;
   flex-wrap: wrap;
   margin-top: auto;
-  padding: 18px 0 20px;
-  border-top: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
-  background: color-mix(in srgb, var(--bg-elev) 96%, transparent);
-  position: sticky;
-  bottom: 0;
-  z-index: 1;
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+  background: var(--bg-elev);
+  flex: 0 0 auto;
+}
+
+.records-question-progress {
+  min-width: 64px;
+  text-align: center;
+  font-size: var(--text-sm);
 }
 
 .practice-ai-drawer {
@@ -2007,7 +2115,7 @@ label {
 .practice-ai-subtitle,
 .practice-ai-empty {
   color: var(--fg-muted);
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   line-height: 1.5;
 }
 
@@ -2043,7 +2151,7 @@ label {
   color: var(--fg);
   border-radius: var(--radius-full);
   padding: 6px 10px;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
 }
 
 .practice-ai-chip:hover:not(:disabled) {
@@ -2075,7 +2183,7 @@ label {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   line-height: 1.6;
   text-align: center;
   padding: 18px;
@@ -2093,7 +2201,7 @@ label {
   padding: 11px 13px;
   white-space: pre-wrap;
   line-height: 1.6;
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
 }
 
 .practice-ai-bubble .markdown-content {
@@ -2152,7 +2260,7 @@ label {
 }
 
 .practice-ai-status {
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
   color: var(--fg-muted);
   display: inline-flex;
   align-items: center;
@@ -2176,7 +2284,7 @@ label {
 
 .question-nav-header {
   margin-bottom: 12px;
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
 }
 
 .question-nav-stats {
@@ -2196,7 +2304,7 @@ label {
 .question-nav-stat-label {
   display: block;
   color: var(--fg-muted);
-  font-size: 11px;
+  font-size: var(--text-sm);
   margin-bottom: 4px;
 }
 
@@ -2219,7 +2327,7 @@ label {
   border: 1px solid var(--border);
   background: var(--bg-elev);
   color: var(--fg-muted);
-  font-size: 11px;
+  font-size: var(--text-sm);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2260,7 +2368,7 @@ label {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  font-size: 11px;
+  font-size: var(--text-sm);
   color: var(--fg-muted);
 }
 
@@ -2279,7 +2387,7 @@ label {
   border-radius: var(--radius-full);
   background: var(--primary-subtle);
   color: var(--primary);
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   font-weight: 700;
   font-family: var(--font-mono);
   white-space: nowrap;
@@ -2292,12 +2400,10 @@ label {
   gap: 12px;
   flex-wrap: wrap;
   margin-top: auto;
-  padding: 18px 0 20px;
-  border-top: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
-  background: color-mix(in srgb, var(--bg-elev) 96%, transparent);
-  position: sticky;
-  bottom: 0;
-  z-index: 1;
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+  background: var(--bg-elev);
+  flex: 0 0 auto;
 }
 
 .exam-final-submit-bar {
@@ -2316,7 +2422,7 @@ label {
 .exam-final-submit-bar button {
   min-width: 180px;
   padding: 10px 24px;
-  font-size: var(--text-md);
+  font-size: var(--text-lg);
   font-weight: 700;
 }
 
@@ -2360,6 +2466,60 @@ label {
   font-weight: 700;
 }
 
+.modal-scroll-body {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.modal-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.modal-footer {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.modal-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--text-base);
+  color: var(--fg-muted);
+  font-weight: 500;
+}
+
+.input {
+  font-family: inherit;
+  font-size: var(--text-base);
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--fg);
+  width: 100%;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+textarea.input {
+  min-height: 200px;
+  resize: none;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: var(--space-4);
+}
+
 .modal-body {
   padding: 20px;
   overflow-y: auto;
@@ -2380,13 +2540,12 @@ label {
 .modal-body input,
 .modal-body textarea {
   font-family: inherit;
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   padding: 8px 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--bg);
   color: var(--fg);
-  resize: vertical;
 }
 
 .modal-body textarea {
@@ -2407,12 +2566,51 @@ label {
   word-break: break-word;
 }
 
+.empty-state {
+  text-align: center;
+  padding: 40px 24px;
+}
+
+.empty-state.compact {
+  padding: 20px 16px;
+}
+
+.empty-state-icon {
+  opacity: 0.4;
+  margin-bottom: var(--space-2);
+}
+
+.empty-state-title {
+  font-weight: 500;
+  margin-bottom: var(--space-3);
+}
+
+.empty-state-title.has-desc {
+  margin-bottom: var(--space-1);
+}
+
+.empty-state-desc {
+  margin-bottom: var(--space-3);
+}
+
 .markdown-content > :first-child {
   margin-top: 0;
 }
 
 .markdown-content > :last-child {
   margin-bottom: 0;
+}
+
+.template-code {
+  background: var(--bg-subtle);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  font-size: 0.85em;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-family: var(--font-mono);
+  line-height: 1.7;
+  margin: 0;
 }
 
 .markdown-content p,
@@ -2691,7 +2889,7 @@ label {
 }
 
 .wrongbook-summary-label {
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   color: var(--fg-muted);
 }
 
@@ -2746,7 +2944,7 @@ label {
 
 .wrongbook-question-stem {
   white-space: pre-wrap;
-  font-size: var(--text-md);
+  font-size: var(--text-lg);
   line-height: var(--leading-relaxed);
 }
 
@@ -2777,7 +2975,7 @@ label {
 }
 
 .wrongbook-answer-label {
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--fg-muted);
 }
@@ -2977,6 +3175,7 @@ label {
 
 .answer-input {
   margin-bottom: 0;
+  font-size: var(--text-base);
 }
 
 .answer-panel {
@@ -2985,6 +3184,8 @@ label {
   background: var(--bg-subtle);
   color: var(--fg);
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-width: 100%;
 }
 
 .answer-panel.explanation {
@@ -3135,6 +3336,11 @@ label {
   .main {
     padding: 24px 24px 40px;
   }
+
+  .practice-page-active {
+    height: calc(100vh - 64px);
+    height: calc(100dvh - 64px);
+  }
 }
 
 @media (max-width: 760px) {
@@ -3144,6 +3350,11 @@ label {
 
   .main {
     padding: 20px 16px 32px;
+  }
+
+  .practice-page-active {
+    height: calc(100vh - 52px);
+    height: calc(100dvh - 52px);
   }
 
   .page-header {

@@ -19,13 +19,10 @@ export class ErrorBoundary extends React.Component<{ children: React.ReactNode }
   render() {
     if (this.state.err) {
       return (
-        <div style={{ padding: 24, color: '#dc2626', fontFamily: 'monospace' }}>
+        <div style={{ padding: 24, fontFamily: 'monospace' }} className="text-danger">
           <h2>页面出错了</h2>
           <pre style={{ whiteSpace: 'pre-wrap' }}>{this.state.err.stack ?? this.state.err.message}</pre>
-          <button
-            style={{ marginTop: 12, padding: '6px 12px' }}
-            onClick={() => location.reload()}
-          >
+          <button className="mt-md" onClick={() => location.reload()}>
             重新加载
           </button>
         </div>

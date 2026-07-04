@@ -15,6 +15,7 @@ import {
   localCheckAnswer,
   localGradeAnswer,
 } from '@shared/practice-grading';
+import { MarkdownContent } from './MarkdownContent';
 import { matchesShortcut } from '../utils/shortcuts';
 
 interface Props {
@@ -40,7 +41,7 @@ function cleanSection(s: string | null | undefined): string | null {
 
 function looksLikeCode(s: string): boolean {
   if (!s) return false;
-  if (/\n/.test(s)) return true;
+  if (/```|~~~/.test(s)) return true;
   if (
     /(\bfunction\b|\bconst\b|\blet\b|\bclass\b|\bimport\b|\breturn\b|\bawait\b|\basync\b|=>|===|!==)/.test(
       s,
@@ -432,11 +433,10 @@ export default function QuestionCard({
           {displaySection && <span className="badge muted">{displaySection}</span>}
         </div>
 
-        <div
+        <MarkdownContent
+          content={question.stem}
           className={`practice-question-stem${looksLikeCode(question.stem) ? ' is-code' : ''}`}
-        >
-          {question.stem}
-        </div>
+        />
 
         {isOptionQuestion(question.type) && question.options && (
           <div className="practice-options">
@@ -475,11 +475,10 @@ export default function QuestionCard({
                     }}
                   />
                   <span className="practice-option-letter">{`${letter}. `}</span>
-                  <span
+                  <MarkdownContent
+                    content={displayText}
                     className={`practice-option-text${looksLikeCode(displayText) ? ' is-code' : ''}`}
-                  >
-                    {displayText}
-                  </span>
+                  />
                 </label>
               );
             })}

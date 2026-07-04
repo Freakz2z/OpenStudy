@@ -19,12 +19,12 @@
 [![React](https://img.shields.io/badge/React-18-149ECA?logo=react&logoColor=white)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-[English](README.md) · [简体中文](README.zh-CN.md) · [Contributing](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md) · [Releases](https://github.com/Freakz2z/OpenStudy/releases) · [Changelog](CHANGELOG.md) · [Report an Issue](https://github.com/Freakz2z/OpenStudy/issues)
+[English](README.md) · [简体中文](README.zh-CN.md) · [Contributing](CONTRIBUTING.md) · [Releases](https://github.com/Freakz2z/OpenStudy/releases) · [Changelog](CHANGELOG.md) · [Report an Issue](https://github.com/Freakz2z/OpenStudy/issues)
 
 </div>
 
 <p align="center">
-  <img src=".github/assets/usage-flow.png" alt="OpenStudy workflow map for Markdown import, question cleanup, deliberate practice, wrong-book review, and manual insights" width="100%">
+  <img src=".github/assets/usage-flow.png" alt="OpenStudy workflow from source import and editable Markdown to structured questions, practice, exams, AI help, records, review, and insights" width="100%">
 </p>
 
 ## Why OpenStudy
@@ -60,10 +60,10 @@ Instead of treating a Markdown note set as a dead asset, OpenStudy turns it into
 ## Demo
 
 <p align="center">
-  <img src=".github/assets/openstudy-workflow.gif" alt="OpenStudy real workflow demo showing Markdown import, source review, focused practice, Ask AI, Wrong Book redo, and manual Insights generation" width="100%">
+  <img src=".github/assets/openstudy-workflow.gif" alt="OpenStudy real workflow demo showing Markdown import, source review, Markdown-rendered practice, Ask AI, practice records, Wrong Book redo, and manual Insights generation" width="100%">
 </p>
 
-The demo above follows the real app loop: `Import Markdown -> Review Source -> Practice -> Ask AI -> Wrong Book -> Redo -> Generate Insights`.
+The demo above follows the real app loop: `Import Markdown -> Review Source -> Practice -> Ask AI -> Practice Records -> Wrong Book -> Redo -> Generate Insights`.
 
 ## Markdown-First, Not Markdown-Only
 

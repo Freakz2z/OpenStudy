@@ -28,6 +28,7 @@ import {
   saveStoredAttempts,
   type StoredAttemptRecord,
 } from '../utils/practice-attempts';
+import { downloadMarkdownFile } from '../utils/helpers';
 
 interface AttemptRecord {
   question: Question;
@@ -215,7 +216,7 @@ export default function Practice() {
     }
   }
 
-  const backTarget = fromWrong ? '/wrong' : '/library';
+  const backTarget = fromWrong ? `/wrong/${docId}` : '/library';
   const backLabel = fromWrong
     ? t('practice.completion.backToWrongbook')
     : t('practice.completion.backToLibrary');
@@ -273,13 +274,7 @@ export default function Practice() {
   function handleExportMarkdown() {
     const title = docTitle || `doc-${docId}`;
     const filename = `${title.replace(/[/\\?%*:|"<>]/g, '_')}-practice.md`;
-    const blob = new Blob([exportMarkdown], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadMarkdownFile(exportMarkdown, filename);
     toast.show('success', t('practice.completion.exported'));
   }
 
@@ -357,7 +352,7 @@ export default function Practice() {
           </div>
 
           {fromWrong && allCorrect && (
-            <div className="card success" style={{ marginTop: 12 }}>
+            <div className="card success mt-md">
               <div className="row gap-sm">
                 <PartyPopper size={18} />
                 <strong>{t('practice.completion.masteredAll')}</strong>
@@ -365,7 +360,7 @@ export default function Practice() {
             </div>
           )}
 
-          <div className="row gap-sm mt-md" style={{ flexWrap: 'wrap' }}>
+          <div className="row gap-sm mt-md wrap">
             <button onClick={restart}>
               <RotateCcw size={16} />
               <span>{t('practice.completion.again')}</span>
@@ -393,14 +388,14 @@ export default function Practice() {
 
         {wrongOnes.length > 0 && (
           <>
-            <h2 style={{ marginTop: 24 }}>
+            <h2 className="mt-xl">
               {t('practice.completion.wrongListTitle', {
                 count: wrongOnes.length,
               })}
             </h2>
             {wrongOnes.map((item) => (
               <div key={item.question.id} className="card">
-                <div className="row gap-sm" style={{ marginBottom: 6 }}>
+                <div className="row gap-sm mb-sm">
                   <span className="badge muted">
                     {item.question.type === 'choice'
                       ? t('practice.types.choice')

@@ -24,6 +24,7 @@ import {
   saveExamAnswers,
   saveExamStartTime,
 } from '../utils/practice-attempts';
+import { downloadMarkdownFile } from '../utils/helpers';
 
 function formatTime(seconds: number): string {
   const h = Math.floor(seconds / 3600);
@@ -247,13 +248,7 @@ export default function Exam() {
   function handleExportMarkdown() {
     const title = docTitle || `doc-${docId}`;
     const filename = `${title.replace(/[/\\?%*:|"<>]/g, '_')}-exam.md`;
-    const blob = new Blob([exportMarkdown], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadMarkdownFile(exportMarkdown, filename);
     toast.show('success', t('exam.result.exported'));
   }
 
@@ -308,12 +303,12 @@ export default function Exam() {
         />
 
         <div className="card">
-          <div className="row gap-md" style={{ flexWrap: 'wrap' }}>
+          <div className="row gap-md wrap">
             <span className="badge success">{t('exam.result.correctCount', { count: correctCount })}</span>
             <span className="badge error">{t('exam.result.wrongCount', { count: wrongCount })}</span>
             <span className="badge muted">{t('exam.result.unansweredCount', { count: unansweredCount })}</span>
           </div>
-          <div className="row gap-sm mt-md" style={{ flexWrap: 'wrap' }}>
+          <div className="row gap-sm mt-md wrap">
             <span className="muted">{t('exam.result.timeTaken', { time: formatTime(elapsedSec) })}</span>
             {answeredCount > 0 && (
               <span className="muted">
@@ -324,7 +319,7 @@ export default function Exam() {
             )}
           </div>
 
-          <div className="row gap-sm mt-md" style={{ flexWrap: 'wrap' }}>
+          <div className="row gap-sm mt-md wrap">
             <button onClick={retake}>
               <RotateCcw size={16} />
               <span>{t('exam.buttons.again')}</span>
@@ -346,12 +341,12 @@ export default function Exam() {
 
         {wrongResults.length > 0 && (
           <>
-            <h2 style={{ marginTop: 24 }}>{t('exam.result.wrongListTitle', { count: wrongResults.length })}</h2>
+            <h2 className="mt-xl">{t('exam.result.wrongListTitle', { count: wrongResults.length })}</h2>
             {wrongResults.map((q) => {
               const r = results[q.id];
               return (
                 <div key={q.id} className="card">
-                  <div className="row gap-sm" style={{ marginBottom: 6 }}>
+                  <div className="row gap-sm mb-sm">
                     <span className="badge muted">{t(`practice.types.${q.type}`)}</span>
                   </div>
                   <div style={{ whiteSpace: 'pre-wrap' }}>{q.stem}</div>
@@ -366,10 +361,10 @@ export default function Exam() {
 
         {unansweredResults.length > 0 && (
           <>
-            <h2 style={{ marginTop: 24 }}>{t('exam.result.unansweredCount', { count: unansweredResults.length })}</h2>
+            <h2 className="mt-xl">{t('exam.result.unansweredCount', { count: unansweredResults.length })}</h2>
             {unansweredResults.map((q) => (
               <div key={q.id} className="card">
-                <div className="row gap-sm" style={{ marginBottom: 6 }}>
+                <div className="row gap-sm mb-sm">
                   <span className="badge muted">{t(`practice.types.${q.type}`)}</span>
                 </div>
                 <div style={{ whiteSpace: 'pre-wrap' }}>{q.stem}</div>

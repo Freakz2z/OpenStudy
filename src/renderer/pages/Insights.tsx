@@ -19,6 +19,7 @@ import type {
 import { EmptyState } from '../components/EmptyState';
 import { LoadingState } from '../components/LoadingState';
 import { PageHeader } from '../components/PageHeader';
+import { formatPct } from '../utils/helpers';
 
 const INSIGHTS_CACHE_KEY = 'openstudy:insights:cache:v1';
 
@@ -27,11 +28,6 @@ interface CachedInsightsPayload {
   language: 'zh' | 'en';
   generatedAt: number;
   result: StudyInsightsResult;
-}
-
-function formatPct(value: number | null | undefined): string {
-  if (value == null) return '—';
-  return `${Math.round(value * 100)}%`;
 }
 
 function startOfDay(timestamp: number): number {

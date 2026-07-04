@@ -77,8 +77,8 @@ const questions = [
     id: 201,
     document_id: 2,
     type: 'choice',
-    stem: 'Which HTTP method is typically idempotent for updating a resource?',
-    options: ['A. POST', 'B. PATCH', 'C. PUT', 'D. CONNECT'],
+    stem: 'Which HTTP method is typically **idempotent** when replacing a resource?\n\n> Assume the same representation is sent more than once.',
+    options: ['A. `POST`', 'B. `PATCH`', 'C. `PUT`', 'D. `CONNECT`'],
     answer: 'C',
     explanation: 'PUT is defined as idempotent when replacing the resource representation.',
     page_or_section: 'REST fundamentals',
@@ -110,7 +110,7 @@ const questions = [
     id: 204,
     document_id: 2,
     type: 'code',
-    stem: 'Read the code below. Which description is correct?',
+    stem: 'Read the annotation below and choose the correct description.\n\n```java\n@WebMvcTest(UserController.class)\n```',
     options: [
       'A. It loads every Spring bean',
       'B. It is used for controller slice testing',
@@ -436,7 +436,7 @@ async function captureGif() {
     await page.getByRole('button', { name: 'Import Document' }).click();
     await sleep(1400);
 
-    await page.getByRole('button', { name: 'Edit File' }).click();
+    await page.getByRole('button', { name: 'Identify' }).click();
     await sleep(1200);
     await page.getByRole('button', { name: 'Back' }).click();
     await sleep(700);
@@ -456,9 +456,16 @@ async function captureGif() {
     await page.locator('.practice-ai-send').click();
     await sleep(1400);
 
-    await page.getByRole('link', { name: 'Wrong Book' }).click();
-    await sleep(900);
-    await page.getByRole('button', { name: /Backend Interview Pack/ }).click();
+    await page.locator('.page-header-back').click();
+    await sleep(800);
+
+    await page.getByRole('button', { name: 'View Records' }).click();
+    await sleep(1700);
+
+    await page.locator('.page-header-back').click();
+    await sleep(700);
+
+    await page.getByRole('button', { name: 'Wrong (1)' }).click();
     await sleep(900);
     await page.getByRole('button', { name: 'Redo' }).click();
     await sleep(900);

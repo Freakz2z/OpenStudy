@@ -5,15 +5,7 @@ import type { IdentifyLogEntry } from '@shared/types';
 import { EmptyState } from '../components/EmptyState';
 import { LoadingState } from '../components/LoadingState';
 import { PageHeader } from '../components/PageHeader';
-
-function formatDateTime(value: number, locale: string): string {
-  return new Date(value).toLocaleString(locale, {
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
+import { formatDateTime } from '../utils/helpers';
 
 export default function Logs() {
   const { t, i18n } = useTranslation();

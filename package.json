@@ -5,7 +5,7 @@
   "license": "MIT",
   "author": {
     "name": "Freakz2z",
-    "email": "3020517046@qq.com"
+    "email": "freak05032@gmail.com"
   },
   "homepage": "https://github.com/Freakz2z/OpenStudy",
   "repository": {
@@ -91,6 +91,10 @@
       {
         "from": "public/app_icon.png",
         "to": "app_icon.png"
+      },
+      {
+        "from": ".claude/skills/openstudy",
+        "to": "skills/openstudy"
       }
     ],
     "files": [

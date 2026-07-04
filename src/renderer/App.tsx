@@ -8,10 +8,11 @@ import Library from './pages/Library';
 import Practice from './pages/Practice';
 import Exam from './pages/Exam';
 import WrongBook from './pages/WrongBook';
-import Logs from './pages/Logs';
 import Conversations from './pages/Conversations';
 import Settings from './pages/Settings';
 import About from './pages/About';
+import Records from './pages/Records';
+import CreateDocument from './pages/CreateDocument';
 import Templates from './pages/Templates';
 import MarkdownEditor from './pages/MarkdownEditor';
 
@@ -37,12 +38,13 @@ export default function App() {
           <Route path="/overview" element={<Overview />} />
           <Route path="/insights" element={<Insights />} />
           <Route path="/library" element={<Library />} />
+          <Route path="/library/create" element={<CreateDocument />} />
           <Route path="/practice/:docId" element={<Practice />} />
           <Route path="/exam/:docId" element={<Exam />} />
+          <Route path="/records/:docId" element={<Records />} />
+          <Route path="/wrong/:docId" element={<WrongBook />} />
+          <Route path="/conversations/:docId" element={<Conversations />} />
           <Route path="/markdown/:docId" element={<MarkdownEditor />} />
-          <Route path="/wrong" element={<WrongBook />} />
-          <Route path="/logs" element={<Logs />} />
-          <Route path="/conversations" element={<Conversations />} />
           <Route path="/models" element={<Navigate to="/settings" replace />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/about" element={<About />} />

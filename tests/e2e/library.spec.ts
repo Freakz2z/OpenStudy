@@ -110,4 +110,21 @@ test.describe('Library 页面', () => {
     await expect(page.getByText('参考答案：')).toHaveCount(0);
     await expect(page.getByRole('button', { name: '提交' })).toBeVisible();
   });
+
+  test('重置进度位于右侧删除按钮左边', async ({ page }) => {
+    await installApiMock(page, {
+      documents: [sampleDocs[1]],
+      questions: sampleQuestions,
+    });
+    await page.goto('/#/library');
+
+    const reset = page.getByRole('button', { name: '重置进度' });
+    const remove = page.getByRole('button', { name: '删除' });
+    const positions = await Promise.all([reset.boundingBox(), remove.boundingBox()]);
+
+    expect(positions[0]).not.toBeNull();
+    expect(positions[1]).not.toBeNull();
+    expect(positions[0]?.x ?? 0).toBeLessThan(positions[1]?.x ?? 0);
+    expect((positions[1]?.x ?? 0) - (positions[0]?.x ?? 0)).toBeLessThan(50);
+  });
 });

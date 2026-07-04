@@ -22,23 +22,17 @@ export function EmptyState({
   compact = false,
 }: EmptyStateProps) {
   return (
-    <div
-      className="card"
-      style={{
-        textAlign: 'center',
-        padding: compact ? '20px 16px' : '40px 24px',
-      }}
-    >
+    <div className={`card empty-state${compact ? ' compact' : ''}`}>
       <Icon
         size={compact ? 28 : 36}
-        style={{ opacity: 0.4, marginBottom: 8 }}
+        className="empty-state-icon"
         aria-hidden="true"
       />
-      <div style={{ fontWeight: 500, marginBottom: description ? 4 : 12 }}>
+      <div className={`empty-state-title${description ? ' has-desc' : ''}`}>
         {title}
       </div>
       {description && (
-        <div className="muted" style={{ marginBottom: 12 }}>
+        <div className="muted empty-state-desc">
           {description}
         </div>
       )}

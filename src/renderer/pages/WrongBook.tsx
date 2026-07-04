@@ -1,14 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  ArrowLeft,
   RefreshCw,
   Trash2,
   Inbox,
   Loader2,
-  ChevronRight,
-  FileText,
 } from 'lucide-react';
 import type { WrongQuestion } from '@shared/types';
 import { formatQuestionAnswerDisplay } from '@shared/question-format';
@@ -17,27 +14,25 @@ import { PageHeader } from '../components/PageHeader';
 import { LoadingState } from '../components/LoadingState';
 import { useToast } from '../components/ToastProvider';
 
-interface DocGroup {
-  id: number;
-  title: string;
-  file_type: string;
-  questions: WrongQuestion[];
-}
-
 export default function WrongBook() {
   const { t } = useTranslation();
   const toast = useToast();
   const navigate = useNavigate();
+  const { docId } = useParams<{ docId: string }>();
   const [list, setList] = useState<WrongQuestion[]>([]);
+  const [docTitle, setDocTitle] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [removing, setRemoving] = useState<number | null>(null);
-  const [activeDocId, setActiveDocId] = useState<number | null>(null);
 
   async function refresh(showLoading = false) {
     if (showLoading) setLoading(true);
     try {
-      setList(await window.api.listWrongQuestions());
+      const all = await window.api.listWrongQuestions();
+      const id = Number(docId);
+      setList(all.filter((q) => q.document_id === id));
+      const title = all.find((q) => q.document_id === id)?.document_title;
+      if (title) setDocTitle(title);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -47,33 +42,7 @@ export default function WrongBook() {
 
   useEffect(() => {
     void refresh(true);
-  }, []);
-
-  // 按文档分组
-  const groups: DocGroup[] = useMemo(() => {
-    const map = new Map<number, DocGroup>();
-    for (const q of list) {
-      let g = map.get(q.document_id);
-      if (!g) {
-        g = {
-          id: q.document_id,
-          title: q.document_title ?? '',
-          file_type: q.document_file_type ?? '',
-          questions: [],
-        };
-        map.set(q.document_id, g);
-      }
-      g.questions.push(q);
-    }
-    return [...map.values()].sort((a, b) => b.questions.length - a.questions.length);
-  }, [list]);
-  const activeGroup = groups.find((group) => group.id === activeDocId) ?? null;
-
-  useEffect(() => {
-    if (activeDocId != null && !groups.some((group) => group.id === activeDocId)) {
-      setActiveDocId(null);
-    }
-  }, [activeDocId, groups]);
+  }, [docId]);
 
   async function onRemoveOne(qId: number) {
     if (!confirm(t('wrongbook.removeConfirm'))) return;
@@ -89,88 +58,65 @@ export default function WrongBook() {
     }
   }
 
-  async function onClearDoc(docId: number) {
-    const g = groups.find((x) => x.id === docId);
-    if (!g) return;
-    if (
-      !confirm(
-        t('wrongbook.clearDocConfirm', { count: g.questions.length, title: g.title }),
-      )
-    )
-      return;
+  async function onClearDoc() {
+    if (!confirm(t('wrongbook.clearDocConfirm', { count: list.length, title: docTitle }))) return;
     try {
-      // 逐题删除（清空该文档下所有错题）
-      for (const q of g.questions) {
+      for (const q of list) {
         await window.api.removeWrongQuestion(q.id);
       }
       await refresh();
-      toast.show('success', t('wrongbook.clearedDoc', { title: g.title }));
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  }
-
-  async function onClearAll() {
-    if (!confirm(t('wrongbook.clearAllConfirm'))) return;
-    try {
-      await window.api.clearWrongBook();
-      await refresh();
-      toast.show('success', t('wrongbook.clearedAll'));
+      toast.show('success', t('wrongbook.clearedDoc', { title: docTitle }));
     } catch (e) {
       setError((e as Error).message);
     }
   }
 
   return (
-    <div>
+    <div className="page">
       <PageHeader
         title={
-          activeGroup ? (
-            <>
-              {t('wrongbook.title')}
-              <span className="muted" style={{ fontSize: 14, fontWeight: 'normal' }}>
+          <>
+            {t('wrongbook.title')}
+            {docTitle && (
+              <span className="page-subtitle muted">
                 {' · '}
-                {activeGroup.title}
+                {docTitle}
               </span>
-            </>
-          ) : (
-            t('wrongbook.title')
-          )
+            )}
+          </>
         }
-        back={
-          activeGroup
-            ? { label: t('common.back'), onClick: () => setActiveDocId(null) }
-            : undefined
-        }
+        back={{ label: t('common.back'), onClick: () => navigate('/library') }}
         actions={
           list.length > 0 ? (
             <button
               className="danger icon-only"
-              onClick={onClearAll}
-              aria-label={t('wrongbook.clearAll')}
-              title={t('wrongbook.clearAll')}
+              onClick={onClearDoc}
+              aria-label={t('wrongbook.clearDoc', { count: list.length })}
+              title={t('wrongbook.clearDoc', { count: list.length })}
             >
               <Trash2 size={16} />
             </button>
           ) : null
         }
       />
+
       {error && (
         <div className="card error" role="alert">
           {error}
         </div>
       )}
+
       {loading ? (
         <LoadingState label={t('common.loading')} />
       ) : list.length === 0 ? (
         <EmptyState
           icon={Inbox}
-          title={t('wrongbook.empty')}
-          description={t('wrongbook.emptyHint')}
+          title={t('wrongbook.emptyForDoc')}
+          description={t('wrongbook.emptyForDocHint')}
         />
-      ) : activeGroup ? (
+      ) : (
         <div className="col gap-md">
-          {activeGroup.questions.map((q) => (
+          {list.map((q) => (
             <div key={q.id} className="card wrongbook-q-card">
               <div className="row gap-sm mb-md">
                 <span className="badge muted">
@@ -239,56 +185,11 @@ export default function WrongBook() {
             </div>
           ))}
           <div className="card wrongbook-doc-footer">
-            <div className="row gap-sm" style={{ justifyContent: 'space-between', flexWrap: 'wrap' }}>
-              <button className="ghost sm" onClick={() => setActiveDocId(null)}>
-                <ArrowLeft size={14} />
-                <span>{t('common.back')}</span>
-              </button>
-              <button className="ghost sm" onClick={() => onClearDoc(activeGroup.id)}>
-                <Trash2 size={14} />
-                <span>{t('wrongbook.clearDoc', { count: activeGroup.questions.length })}</span>
-              </button>
-            </div>
+            <button className="ghost sm" onClick={onClearDoc}>
+              <Trash2 size={14} />
+              <span>{t('wrongbook.clearDoc', { count: list.length })}</span>
+            </button>
           </div>
-        </div>
-      ) : (
-        <div className="col gap-md">
-          {groups.map((g) => {
-            return (
-              <div key={g.id} className="card wrongbook-doc">
-                <button
-                  className="wrongbook-doc-header"
-                  onClick={() => setActiveDocId(g.id)}
-                >
-                  <FileText size={18} />
-                  <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
-                    <div
-                      style={{
-                        fontWeight: 600,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {g.title}
-                    </div>
-                    <div
-                      className="tiny"
-                      style={{ marginTop: 2 }}
-                    >
-                      <span className="badge muted" style={{ marginRight: 6 }}>
-                        {g.file_type.toUpperCase()}
-                      </span>
-                      {t('wrongbook.docCount', {
-                        count: g.questions.length,
-                      })}
-                    </div>
-                  </div>
-                  <ChevronRight size={16} className="chevron-right" />
-                </button>
-              </div>
-            );
-          })}
         </div>
       )}
     </div>
