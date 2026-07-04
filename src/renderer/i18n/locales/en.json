@@ -119,7 +119,29 @@
       "practice": "Practice",
       "delete": "Delete",
       "deleting": "Deleting…",
-      "reset": "Reset progress"
+      "reset": "Reset progress",
+      "createDoc": "New Document",
+      "rename": "Rename",
+      "editMeta": "Edit Info"
+    },
+    "create": {
+      "title": "New Document",
+      "nameLabel": "Document name",
+      "namePlaceholder": "Enter document name",
+      "descLabel": "Description (optional)",
+      "descPlaceholder": "Brief description of the document",
+      "markdownLabel": "Markdown content",
+      "markdownPlaceholder": "Paste Markdown question content…",
+      "create": "Create",
+      "creating": "Creating…"
+    },
+    "edit": {
+      "title": "Edit Document Info",
+      "nameLabel": "Document name",
+      "descLabel": "Description (optional)",
+      "descPlaceholder": "Brief description of the document",
+      "save": "Save",
+      "saving": "Saving…"
     },
     "reset": {
       "confirm": "Reset progress for this document? All attempt history under this document will be cleared."
@@ -225,7 +247,11 @@
       "backToLibrary": "Back to Library",
       "backToWrongbook": "Back to Wrong Book",
       "wrongListTitle": "Wrong Questions ({{count}})",
-      "docLabel": "Doc #{{id}}"
+      "docLabel": "Doc #{{id}}",
+      "exportMarkdown": "Export Practice Results",
+      "copyMarkdown": "Copy as Markdown",
+      "exported": "Practice results exported",
+      "copied": "Practice results copied to clipboard"
     },
     "redoBanner": "Redo mode: from Wrong Book. Correct answers are automatically removed.",
     "nav": {
@@ -250,6 +276,52 @@
         "explain": "Explain it step by step",
         "summary": "Summarize the common trap in this question"
       }
+    }
+  },
+  "exam": {
+    "title": "Exam Mode",
+    "loading": "Preparing exam…",
+    "noQuestions": "No questions",
+    "noQuestionsHint": "Return to Library to identify questions first.",
+    "back": "← Back",
+    "timer": {
+      "label": "Elapsed"
+    },
+    "progress": "Question {{current}} / {{total}}",
+    "buttons": {
+      "prev": "Previous",
+      "saveAnswer": "Save Answer",
+      "saving": "Saving…",
+      "next": "Next",
+      "submitExam": "Submit Exam",
+      "submitting": "Grading…",
+      "backToLibrary": "Back to Library",
+      "exportMarkdown": "Export Exam Results",
+      "copyMarkdown": "Copy as Markdown",
+      "again": "Retake Exam"
+    },
+    "confirm": {
+      "submit": "Submit the exam? You cannot change answers after submission.",
+      "leave": "You have unsaved answers. Leave anyway?"
+    },
+    "answered": "{{count}} answered",
+    "unanswered": "{{count}} unanswered",
+    "nav": {
+      "label": "Exam Navigator",
+      "answered": "Answered",
+      "unanswered": "Unanswered"
+    },
+    "result": {
+      "title": "Exam Complete!",
+      "correctCount": "Correct {{count}}",
+      "wrongCount": "Wrong {{count}}",
+      "unansweredCount": "Unanswered {{count}}",
+      "timeTaken": "Time: {{time}}",
+      "accuracy": "Accuracy: {{pct}}",
+      "wrongListTitle": "Wrong Questions ({{count}})",
+      "exported": "Exam results exported",
+      "copied": "Exam results copied to clipboard",
+      "docLabel": "Doc #{{id}}"
     }
   },
   "wrongbook": {

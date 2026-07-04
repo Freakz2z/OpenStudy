@@ -3,6 +3,8 @@ import {
   listDocuments,
   getDocument,
   deleteDocument,
+  updateDocument,
+  insertDocumentFromMarkdown,
 } from '../services/db.js';
 import {
   DOCUMENT_IMPORT_FILTERS,
@@ -30,4 +32,16 @@ export function registerDocumentIpc(): void {
     deleteDocument(id);
     return { ok: true };
   });
+
+  ipcMain.handle(
+    'document:createFromMarkdown',
+    (_e, title: string, markdown: string, description?: string) =>
+      insertDocumentFromMarkdown(title, markdown, description),
+  );
+
+  ipcMain.handle(
+    'document:update',
+    (_e, id: number, patch: { title?: string; description?: string | null }) =>
+      updateDocument(id, patch),
+  );
 }

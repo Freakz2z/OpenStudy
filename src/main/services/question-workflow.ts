@@ -5,9 +5,13 @@ import {
   insertQuestions,
   listQuestionsByDocument,
   setExtractedMarkdown,
+  setStandardMarkdown,
 } from './db.js';
 import { parseFile } from './parser/index.js';
-import { identifyQuestions } from './identifier.js';
+import {
+  extractQuestionsFromStandardMarkdown,
+  standardizeMarkdownDocument,
+} from './identifier.js';
 import { parsedDocToMarkdown } from './markdown-workflow.js';
 import {
   normalizeMarkdownStandardLanguage,
@@ -32,22 +36,29 @@ export async function getDocumentMarkdownById(docId: number, lang?: string): Pro
 }> {
   const doc = getDocument(docId);
   if (!doc) throw new Error(`文档不存在: ${docId}`);
-  const standardLang = normalizeMarkdownStandardLanguage(lang);
+  if (doc.standard_markdown && doc.standard_markdown.trim()) {
+    return {
+      markdown: doc.standard_markdown,
+      source: 'db',
+    };
+  }
   if (doc.extracted_markdown && doc.extracted_markdown.trim()) {
     return {
-      markdown: normalizeStandardMarkdown(doc.extracted_markdown, standardLang),
+      markdown: doc.extracted_markdown,
       source: 'db',
     };
   }
 
   const parsed = await parseFile(doc.file_path, doc.file_type);
-  const markdown = parsedDocToMarkdown(parsed, standardLang);
+  const markdown = parsedDocToMarkdown(parsed, normalizeMarkdownStandardLanguage(lang));
   setExtractedMarkdown(docId, markdown);
   return { markdown, source: 'fresh' };
 }
 
 export function saveDocumentMarkdownById(docId: number, markdown: string): { ok: true } {
   setExtractedMarkdown(docId, markdown);
+  const normalizedMarkdown = normalizeStandardMarkdown(markdown);
+  setStandardMarkdown(docId, normalizedMarkdown);
   return { ok: true };
 }
 
@@ -64,7 +75,6 @@ export async function identifyQuestionsForDocument(
   const auditTrail: IdentifyAuditEvent[] = [];
   const standardLang = normalizeMarkdownStandardLanguage(lang);
   let sourceMarkdown = doc.extracted_markdown?.trim() ?? '';
-  if (sourceMarkdown) sourceMarkdown = normalizeStandardMarkdown(sourceMarkdown, standardLang);
   if (!sourceMarkdown) {
     const parsed = await parseFile(doc.file_path, doc.file_type);
     sourceMarkdown = parsedDocToMarkdown(parsed, standardLang);
@@ -72,16 +82,23 @@ export async function identifyQuestionsForDocument(
   }
 
   try {
-    const items = await identifyQuestions({ ...doc, extracted_markdown: sourceMarkdown }, {
-      standardLang,
-      onProgress: (progress) => {
-        win?.webContents.send('question:identify:progress', { docId, ...progress });
+    const standardMarkdown = await standardizeMarkdownDocument(
+      { ...doc, extracted_markdown: sourceMarkdown },
+      sourceMarkdown,
+      {
+        standardLang,
+        onProgress: (progress) => {
+          win?.webContents.send('question:identify:progress', { docId, ...progress });
+        },
+        onAudit: (event) => {
+          auditTrail.push(event);
+        },
       },
-      onAudit: (event) => {
-        auditTrail.push(event);
-      },
-    });
-    const diagnostics = buildIdentifyQualityReport(sourceMarkdown, items);
+    );
+    const normalizedStandardMarkdown = normalizeStandardMarkdown(standardMarkdown, standardLang);
+    setStandardMarkdown(docId, normalizedStandardMarkdown);
+    const items = extractQuestionsFromStandardMarkdown(normalizedStandardMarkdown, standardLang);
+    const diagnostics = buildIdentifyQualityReport(normalizedStandardMarkdown, items);
     deleteQuestionsByDocument(docId);
     insertQuestions(
       docId,
@@ -103,7 +120,7 @@ export async function identifyQuestionsForDocument(
         estimated_question_count: diagnostics.estimatedQuestionCount,
         identified_question_count: diagnostics.identifiedQuestionCount,
         events: auditTrail,
-        markdown: sourceMarkdown,
+        markdown: normalizedStandardMarkdown,
       }));
     } catch {}
     return {
@@ -149,6 +166,8 @@ export async function importExamMarkdownToDocument(
   const { parsedExamToQuestions } = await import('../../shared/exam-to-questions.js');
   const standardLang = normalizeMarkdownStandardLanguage(lang);
   const normalizedMarkdown = normalizeStandardMarkdown(markdown, standardLang);
+  setExtractedMarkdown(docId, markdown);
+  setStandardMarkdown(docId, normalizedMarkdown);
   const exam = parseExamMarkdown(normalizedMarkdown);
   const items = parsedExamToQuestions(exam);
   deleteQuestionsByDocument(docId);

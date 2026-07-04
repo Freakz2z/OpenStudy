@@ -1857,7 +1857,6 @@ label {
 .practice-option:hover:not(.disabled):not(.revealed) {
   background: var(--bg-hover);
   border-color: var(--primary);
-  transform: translateX(2px);
   box-shadow: var(--shadow-sm);
 }
 
@@ -2245,6 +2244,11 @@ label {
   border-color: var(--danger);
   color: var(--danger);
 }
+.qnav-cell.qnav-answered {
+  background: var(--primary-subtle);
+  border-color: var(--primary);
+  color: var(--primary);
+}
 .qnav-cell.qnav-current {
   background: var(--primary);
   border-color: var(--primary);
@@ -2264,6 +2268,136 @@ label {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+
+/* ---- Exam ---- */
+.exam-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  background: var(--primary-subtle);
+  color: var(--primary);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.exam-submit-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding: 18px 0 20px;
+  border-top: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+  background: color-mix(in srgb, var(--bg-elev) 96%, transparent);
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+}
+
+.exam-final-submit-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  padding: 14px 24px;
+  background: color-mix(in srgb, var(--bg) 90%, transparent);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.exam-final-submit-bar button {
+  min-width: 180px;
+  padding: 10px 24px;
+  font-size: var(--text-md);
+  font-weight: 700;
+}
+
+/* ---- Modal ---- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  padding: 24px;
+}
+
+.modal {
+  width: 100%;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: 700;
+}
+
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-body label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--text-sm);
+  color: var(--fg-muted);
+  font-weight: 500;
+}
+
+.modal-body input,
+.modal-body textarea {
+  font-family: inherit;
+  font-size: var(--text-sm);
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--fg);
+  resize: vertical;
+}
+
+.modal-body textarea {
+  min-height: 120px;
+}
+
+.modal-body .modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
 }
 
 .markdown-content {

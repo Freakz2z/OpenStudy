@@ -37,7 +37,18 @@ const api = {
     ipcRenderer.invoke('app:checkLatestRelease', force),
   importFile: () => ipcRenderer.invoke('document:import'),
   listDocuments: (): Promise<Document[]> => ipcRenderer.invoke('document:list'),
+  getDocument: (id: number): Promise<Document | undefined> =>
+    ipcRenderer.invoke('document:get', id),
   deleteDocument: (id: number) => ipcRenderer.invoke('document:delete', id),
+  createDocumentFromMarkdown: (
+    title: string,
+    markdown: string,
+    description?: string,
+  ): Promise<Document> => ipcRenderer.invoke('document:createFromMarkdown', title, markdown, description),
+  updateDocument: (
+    id: number,
+    patch: { title?: string; description?: string | null },
+  ): Promise<Document> => ipcRenderer.invoke('document:update', id, patch),
   identifyQuestions: (
     docId: number,
     lang?: MarkdownStandardLanguage,

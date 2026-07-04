@@ -68,6 +68,35 @@ test.describe('判分算法', () => {
     await expect(page.getByText('✓ 正确')).toBeVisible();
   });
 
+  test('填空题：答案与参考答案完全一致时直接本地判对，不调用 AI', async ({ page }) => {
+    const questions = [
+      {
+        id: 1,
+        document_id: 2,
+        type: 'fill' as const,
+        stem: '《静夜思》的作者是___。',
+        options: null,
+        answer: '李白',
+        explanation: null,
+        page_or_section: null,
+        position: 0,
+      },
+    ];
+    await installApiMock(page, { questions });
+    await page.goto('/#/practice/2');
+    await page.getByPlaceholder('输入答案').fill('李白');
+    await page.getByRole('button', { name: '提交' }).click();
+    await expect(page.getByText('✓ 正确')).toBeVisible();
+    await expect(page.getByText('答案与参考答案完全一致，已直接判定正确。')).toBeVisible();
+    const gradeCalls = await page.evaluate(
+      () =>
+        (window as typeof window & {
+          __testHooks?: { gradePracticeAnswerCalls?: number };
+        }).__testHooks?.gradePracticeAnswerCalls ?? -1,
+    );
+    expect(gradeCalls).toBe(0);
+  });
+
   test('简答题：答中 ≥60% 关键词视为正确', async ({ page }) => {
     const questions = [
       {

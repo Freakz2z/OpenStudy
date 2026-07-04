@@ -56,10 +56,13 @@ export interface Document {
   file_path: string;
   file_type: FileType;
   title: string;
+  description?: string | null;
   imported_at: number;
   question_count: number;
-  /** 用户编辑后的 Markdown 文本（编辑原文件功能） */
+  /** 用户编辑后的源 Markdown 文本 */
   extracted_markdown?: string | null;
+  /** 最近一次”识别题目”生成的 OpenStudy 标准 Markdown 快照 */
+  standard_markdown?: string | null;
 }
 
 export interface Question {

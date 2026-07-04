@@ -4,6 +4,7 @@ import {
   formatQuestionAnswerDisplay,
   getChoiceOptionLetter,
   getChoiceOptionText,
+  isOptionQuestion,
   normalizeChoiceAnswer,
   normalizeChoiceOptions,
   parseChoiceOption,
@@ -53,6 +54,14 @@ describe('question-format', () => {
     expect(formatQuestionAnswerDisplay('choice', 'B', ['北京', '上海'])).toBe(
       'B. 上海',
     );
+    expect(formatQuestionAnswerDisplay('code', 'B', ['甲', '乙'])).toBe('B. 乙');
     expect(formatQuestionAnswerDisplay('fill', ' 李白 ', null)).toBe('李白');
+  });
+
+  it('代码题也视为选项题', () => {
+    expect(isOptionQuestion('choice')).toBe(true);
+    expect(isOptionQuestion('judge')).toBe(true);
+    expect(isOptionQuestion('code')).toBe(true);
+    expect(isOptionQuestion('short')).toBe(false);
   });
 });

@@ -232,7 +232,7 @@ openstudy ingest <file> [--title TITLE] [--lang zh|en] [--skip-identify]
   <summary><strong>文档与 Markdown</strong></summary>
 
 ```bash
-openstudy docs list
+openstudy docs list [--format json|table]
 openstudy docs import <file> [--title TITLE]
 openstudy markdown get <docId> [--output out.md]
 openstudy markdown set <docId> <file.md>
@@ -247,7 +247,7 @@ openstudy markdown set <docId> <file.md>
 openstudy questions identify <docId> [--lang zh|en]
 openstudy questions list <docId> [--format json|table]
 openstudy questions export <docId> [--format json|markdown] [--output file]
-openstudy validate <file.(md|json)> [--format markdown|json]
+openstudy validate <file.(md|json)> [--format markdown|json] [--lang zh|en]
 openstudy exam import <docId> <file.(md|json)>
 openstudy standards schema [--print]
 openstudy standards markdown [--lang zh|en]
@@ -263,8 +263,8 @@ openstudy attempts add <questionId> --answer "..." [--correct]
 openstudy attempts wrong
 openstudy attempts recent [--limit 20]
 openstudy attempts clear --all | --doc <docId> | --question <questionId>
-openstudy stats overall
-openstudy stats doc <docId>
+openstudy stats overall [--format json|table]
+openstudy stats doc <docId> [--format json|table]
 ```
 
 </details>
@@ -337,8 +337,51 @@ npm run dist:linux
 - [x] 坚持 Markdown 作为最终可编辑、可维护的学习格式。
 - [x] 通过 MarkItDown 和共享 CLI 工作流支持多格式文档导入。
 - [x] 提供 Windows、Apple Silicon macOS 和 Linux 的统一安装包。
+- [x] 考试模式：计时器、延迟批改、批量提交、localStorage 持久化。
+- [x] Claude Code Skill 集成：10 个斜杠命令，含完整工作流和题目生成规范。
 - [ ] 继续提升 OCR 和强视觉依赖场景下的导入质量，不只停留在基础 MarkItDown 能力。
 - [ ] 为超大规模题库补齐超过模型上下文上限时的自动拆分与重组能力。
+
+## 产品形态
+
+OpenStudy 通过四种互补形态交付，各处于不同成熟度：
+
+| 形态 | 说明 | 进度 |
+|------|------|------|
+| **Desktop** | Electron 桌面应用 — 题库管理、做题、考试、洞察、设置 | ~90% |
+| **CLI** | `openstudy` 命令行 — 导入、转换、校验、导出、统计、AI | ~85% |
+| **Skill** | Claude Code 斜杠命令 — 10 个 `/openstudy:*` 命令 + 工作流编排 | ~80% |
+| **Standard** | OpenStudy Markdown/JSON 格式 — 双层标准、Schema 校验、六种题型 | ~80% |
+
+### Claude Code Skill 集成
+
+项目在 `.claude/skills/openstudy/` 下提供了 10 个可安装的斜杠命令，让你可以在 Claude Code、Codex 或 OpenClaw 中直接操作整个学习工作流：
+
+| 命令 | 功能 |
+|------|------|
+| `/openstudy:ingest` | 导入文档并识别题目 |
+| `/openstudy:identify` | 对文档运行 AI 题目识别 |
+| `/openstudy:exam` | 导入 Standard Markdown/JSON 题目集 |
+| `/openstudy:export` | 导出题目为 Standard Markdown 或 JSON |
+| `/openstudy:validate` | 校验题目是否符合 OpenStudy 标准格式 |
+| `/openstudy:grade` | AI 批改简答题和填空题 |
+| `/openstudy:insights` | 基于错题记录生成 AI 学习洞察 |
+| `/openstudy:stats` | 查看整体或文档级学习统计 |
+| `/openstudy:doctor` | 诊断 CLI 环境和依赖 |
+| `/openstudy:settings` | 查看或修改 LLM 配置 |
+
+主入口 `/openstudy` 还包含完整的题目生成规范——题型选择策略、各题型编写要求、难度校准和质量检查清单——让 AI 能够从你的知识材料中生成结构良好的题目集。
+
+详见 [`STUDY.md`](STUDY.md) 获取完整的 Skill 文档和格式规范。
+
+## 考试模式
+
+桌面端支持两种做题模式：
+
+- **做题模式** — 逐题即时反馈、AI 提问、查看答案、对错导航。适合学习和复习。
+- **考试模式** — 无即时反馈、禁用 AI 和答案、带计时器、交卷时批量批改、可修改答案、localStorage 持久化。适合自测和模拟考试。
+
+在题库中点击文档旁的考试按钮（剪贴板图标）即可开始考试。
 
 ## 参与贡献
 

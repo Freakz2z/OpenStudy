@@ -7,15 +7,20 @@ import {
   isOptionQuestion,
   normalizeChoiceAnswer,
   normalizeChoiceOptions,
+  stripChoicePrefix,
 } from '../../shared/question-format.js';
 import type { MarkdownStandardLanguage } from '../../shared/markdown-standard.js';
 import { parseFile, type ParseFileOptions } from './parser/index.js';
 import { getLLMProvider, type LLMProvider } from './llm/index.js';
 import { splitText } from './chunker.js';
-import { normalizeStandardMarkdown } from '../../shared/markdown-standard.js';
+import {
+  STANDARD_SECTION_TITLES,
+  STANDARD_TYPE_VALUES,
+  normalizeMarkdownStandardLanguage,
+  normalizeStandardMarkdown,
+} from '../../shared/markdown-standard.js';
 import {
   parseStructuredQuestions,
-  segmentQuestionDocument,
   type SourceQuestionBlock,
 } from './question-structure.js';
 import { parsedDocToMarkdown } from './markdown-workflow.js';
@@ -35,6 +40,7 @@ export interface IdentifyOptions {
   parseSource?: ParseFileOptions['source'];
   onProgress?: (p: IdentifyProgress) => void;
   onAudit?: (event: IdentifyAuditEvent) => void;
+  onStandardizedMarkdown?: (markdown: string) => void;
 }
 
 // 非标准选项前缀（如 R/C/T/L）与出现顺序的映射。
@@ -74,27 +80,100 @@ export async function identifyQuestions(
 
   let markdown: string;
   if (doc.extracted_markdown && doc.extracted_markdown.trim()) {
-    markdown = normalizeStandardMarkdown(doc.extracted_markdown.trim(), opts.standardLang);
+    markdown = doc.extracted_markdown.trim();
     onProgress?.({ phase: 'parse', message: `使用编辑后的 Markdown（${markdown.length} 字符）` });
   } else {
     const parsed = await parseFile(doc.file_path, doc.file_type, { source: opts.parseSource });
     const text = (parsed.markdown ?? parsed.text)?.trim() ?? '';
     if (!hasMeaningfulDocumentText(text)) throw new OcrRequiredError(doc.file_path);
-    markdown = normalizeStandardMarkdown(parsedDocToMarkdown(parsed, opts.standardLang), opts.standardLang);
+    markdown = parsedDocToMarkdown(parsed, opts.standardLang).trim();
     onProgress?.({ phase: 'parse', message: `已转换为 Markdown，共 ${markdown.length} 字符` });
   }
 
-  const structured = segmentQuestionDocument(markdown);
+  const locallyParsed = extractQuestionsFromStandardMarkdown(markdown, opts.standardLang);
+  if (locallyParsed.length > 0) {
+    const standardized = renderExtractedQuestionsMarkdown(locallyParsed, opts.standardLang);
+    opts.onStandardizedMarkdown?.(standardized);
+    onProgress?.({
+      phase: 'done',
+      message: `检测到标准 Markdown，已直接本地结构化 ${locallyParsed.length} 道题`,
+      current: locallyParsed.length,
+      total: locallyParsed.length,
+    });
+    return locallyParsed;
+  }
+
+  const structured = parseStructuredQuestions(markdown);
   if (structured.blocks.length > 0) {
-    return identifyStructuredBlocks(doc, structured.blocks, {
+    const localQuestions = structured.questions.filter(
+      (question): question is ExtractedQuestion => Boolean(question),
+    );
+    if (localQuestions.length === structured.blocks.length) {
+      onProgress?.({
+        phase: 'done',
+        message: `已直接本地结构化 ${localQuestions.length} 道题`,
+        current: localQuestions.length,
+        total: localQuestions.length,
+      });
+      opts.onStandardizedMarkdown?.(renderExtractedQuestionsMarkdown(localQuestions, opts.standardLang));
+      return localQuestions;
+    }
+
+    const unresolvedBlocks = structured.blocks.filter((_, index) => !structured.questions[index]);
+    if (localQuestions.length > 0) {
+      onAudit?.({
+        severity: 'info',
+        stage: 'parse',
+        message: `本地已直接结构化 ${localQuestions.length}/${structured.blocks.length} 道题，剩余 ${unresolvedBlocks.length} 道交给 AI 补全。`,
+        raw_question_count: structured.blocks.length,
+        matched_question_count: localQuestions.length,
+      });
+    }
+
+    const recovered = await identifyStructuredBlocks(doc, unresolvedBlocks, {
       concurrency: opts.concurrency ?? 3,
       standardLang: opts.standardLang,
       onProgress,
       onAudit,
     });
+    let recoveredCursor = 0;
+    const merged = structured.blocks.flatMap((block, index) => {
+      const local = structured.questions[index];
+      if (local) return [local];
+      const item = recovered[recoveredCursor++];
+      return item ? [item] : [];
+    });
+    opts.onStandardizedMarkdown?.(renderExtractedQuestionsMarkdown(merged, opts.standardLang));
+    return merged;
   }
 
-  return identifyUnstructuredText(doc, markdown, opts);
+  const result = await identifyUnstructuredText(doc, markdown, opts);
+  opts.onStandardizedMarkdown?.(renderExtractedQuestionsMarkdown(result, opts.standardLang));
+  return result;
+}
+
+export async function standardizeMarkdownDocument(
+  doc: Document,
+  sourceMarkdown: string,
+  opts: IdentifyOptions = {},
+): Promise<string> {
+  const local = extractQuestionsFromStandardMarkdown(sourceMarkdown, opts.standardLang);
+  if (local.length > 0) {
+    const rendered = renderExtractedQuestionsMarkdown(local, opts.standardLang);
+    opts.onStandardizedMarkdown?.(rendered);
+    return rendered;
+  }
+
+  const questions = await identifyQuestions(
+    {
+      ...doc,
+      extracted_markdown: sourceMarkdown,
+    },
+    opts,
+  );
+  const rendered = renderExtractedQuestionsMarkdown(questions, opts.standardLang);
+  opts.onStandardizedMarkdown?.(rendered);
+  return rendered;
 }
 
 function hasMeaningfulDocumentText(text: string): boolean {
@@ -114,7 +193,7 @@ async function identifyStructuredBlocks(
   },
 ): Promise<ExtractedQuestion[]> {
   const provider = getLLMProvider();
-  const parsed: Array<ExtractedQuestion | null> = blocks.map(() => null);
+  const parsed = new Map<number, ExtractedQuestion>();
 
   // 在交给 LLM 之前，把非 A/B/C/D 的选项前缀强制重编号为 A/B/C/D，
   // 避免模型被 R/C/T/L 这类内容相关前缀误导。
@@ -191,11 +270,11 @@ async function identifyStructuredBlocks(
 
   for (const matched of batchResults) {
     for (const { index, item, originalBlock } of matched) {
-      parsed[index] = applyBlockMetadata(item, originalBlock);
+      parsed.set(index, applyBlockMetadata(item, originalBlock));
     }
   }
 
-  const unresolved = normalizedBlocks.filter((block) => !parsed[block.index]);
+  const unresolved = normalizedBlocks.filter((block) => !parsed.has(block.index));
   if (unresolved.length > 0) {
     opts.onProgress?.({
       phase: 'llm',
@@ -217,20 +296,23 @@ async function identifyStructuredBlocks(
       return { index: block.index, item };
     });
     for (const { index, item } of recovered) {
-      if (item) parsed[index] = applyBlockMetadata(item, blockToOriginal.get(index)!);
+      if (item) parsed.set(index, applyBlockMetadata(item, blockToOriginal.get(index)!));
     }
   }
 
-  const result = parsed.filter((q): q is ExtractedQuestion => Boolean(q));
+  const result = blocks.flatMap((block) => {
+    const item = parsed.get(block.index);
+    return item ? [item] : [];
+  });
   const missing = blocks
-    .filter((block) => !parsed[block.index])
+    .filter((block) => !parsed.has(block.index))
     .map(describeBlock);
   if (result.length !== blocks.length && missing.length > 0) {
     opts.onAudit?.({
       severity: 'error',
       stage: 'integrity',
       message: `完整性校验失败：题块 ${blocks.length}，成功结构化 ${result.length}。`,
-      source_ids: blocks.filter((block) => !parsed[block.index]).map(sourceId),
+      source_ids: blocks.filter((block) => !parsed.has(block.index)).map(sourceId),
       raw_question_count: blocks.length,
       matched_question_count: result.length,
       preview: missing.slice(0, 6).join('；'),
@@ -612,19 +694,29 @@ async function identifyQuestionsWithMarkdownFirst(
   return provider.identifyQuestions(input);
 }
 
-function parseMarkdownToQuestions(
+export function extractQuestionsFromStandardMarkdown(
   markdown: string,
   standardLang?: MarkdownStandardLanguage,
 ): ExtractedQuestion[] {
   const normalized = normalizeStandardMarkdown(markdown, standardLang);
+  if (!looksLikeStandardMarkdown(normalized)) return [];
   const { blocks, questions } = parseStructuredQuestions(normalized);
-  return questions.flatMap((question, index) => {
+  if (blocks.length === 0) return [];
+  const usable = questions.flatMap((question, index) => {
     if (!question || !isUsableQuestion(question)) return [];
     return [{
       ...question,
       source_id: question.source_id ?? blocks[index]?.sourceId ?? undefined,
     }];
   });
+  return usable.length === blocks.length ? usable : [];
+}
+
+function parseMarkdownToQuestions(
+  markdown: string,
+  standardLang?: MarkdownStandardLanguage,
+): ExtractedQuestion[] {
+  return extractQuestionsFromStandardMarkdown(markdown, standardLang);
 }
 
 function trimBlockPreview(blocks: SourceQuestionBlock[]): string {
@@ -659,4 +751,65 @@ function dedupeQuestions(items: ExtractedQuestion[]): ExtractedQuestion[] {
     }
   }
   return [...seen.values()];
+}
+
+function looksLikeStandardMarkdown(markdown: string): boolean {
+  return /(^|\n)\s*Type:\s*(choice|multiple|judge|fill|short|code)\b/i.test(markdown) &&
+    /(^|\n)\s*Answer:\s*\S+/i.test(markdown);
+}
+
+function renderExtractedQuestionsMarkdown(
+  questions: ExtractedQuestion[],
+  lang?: string | MarkdownStandardLanguage,
+): string {
+  const standardLang = normalizeMarkdownStandardLanguage(lang);
+  const blocks: string[] = [];
+  let lastType: ExtractedQuestion['type'] | null = null;
+  let questionNumber = 0;
+
+  for (const question of questions.filter(isUsableQuestion)) {
+    if (question.type !== lastType) {
+      blocks.push(`## ${STANDARD_SECTION_TITLES[standardLang][question.type]}`);
+      blocks.push('');
+      lastType = question.type;
+      questionNumber = 0;
+    }
+
+    questionNumber += 1;
+    if (question.source_id) {
+      blocks.push(`<!-- QUESTION_ID:${question.source_id} -->`);
+    }
+    blocks.push(`### ${questionNumber}. ${question.stem.trim()}`);
+    blocks.push('');
+
+    const options = normalizeChoiceOptions(
+      question.type === 'judge'
+        ? question.options ?? ['正确', '错误']
+        : question.options,
+    );
+    if (isOptionQuestion(question.type) && options?.length) {
+      for (const [index, option] of options.entries()) {
+        blocks.push(`- ${String.fromCharCode(65 + index)}. ${stripChoicePrefix(option)}`);
+      }
+      blocks.push('');
+    }
+
+    blocks.push(`Type: ${STANDARD_TYPE_VALUES[question.type]}`);
+    blocks.push(
+      `Answer: ${
+        isOptionQuestion(question.type)
+          ? normalizeChoiceAnswer(question.answer, options)
+          : question.answer.trim()
+      }`,
+    );
+    if (question.explanation?.trim()) {
+      blocks.push(`Explanation: ${question.explanation.trim()}`);
+    }
+    if (question.page_or_section?.trim()) {
+      blocks.push(`Topic: ${question.page_or_section.trim()}`);
+    }
+    blocks.push('');
+  }
+
+  return blocks.join('\n').replace(/\n{3,}/g, '\n\n').trim();
 }

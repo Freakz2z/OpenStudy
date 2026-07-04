@@ -1,6 +1,6 @@
 {
   "name": "openstudy",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Markdown-first AI study workspace and CLI that turns notes and imported documents into structured questions, deliberate practice, Ask AI, review, and insights",
   "license": "MIT",
   "author": {

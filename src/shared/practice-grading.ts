@@ -15,6 +15,14 @@ export function isAiAssistedQuestion(type: QuestionType): boolean {
   return type === 'short' || type === 'fill' || type === 'code';
 }
 
+export function isExactFillMatch(
+  question: Pick<Question, 'type' | 'answer'>,
+  userAnswer: string,
+): boolean {
+  if (question.type !== 'fill') return false;
+  return userAnswer.trim() === question.answer.trim();
+}
+
 function normalizeFillAnswer(value: string): string {
   return value.replace(/[\s　，。、,.；;：:！!？?'''""]/g, '').toLowerCase();
 }

@@ -49,12 +49,14 @@ export async function installApiMock(
           identifyCalls: number[];
           lastIdentifyDocId: number | null;
           progressListeners: Array<(p: unknown) => void>;
+          gradePracticeAnswerCalls: number;
         };
       };
       w.__testHooks = {
         identifyCalls: [],
         lastIdentifyDocId: null,
         progressListeners: [],
+        gradePracticeAnswerCalls: 0,
       };
 
       const normalizeChoiceAnswer = (value: string) =>
@@ -184,7 +186,10 @@ export async function installApiMock(
         gradePracticeAnswer: (payload: {
           question: { type: string; answer: string; options?: string[] | null };
           userAnswer: string;
-        }) => Promise.resolve(localGradeAnswer(payload.question, payload.userAnswer)),
+        }) => {
+          w.__testHooks.gradePracticeAnswerCalls += 1;
+          return Promise.resolve(localGradeAnswer(payload.question, payload.userAnswer));
+        },
         testModel: () =>
           Promise.resolve({
             ok: true,

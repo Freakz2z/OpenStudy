@@ -64,10 +64,16 @@ const MIGRATIONS = [
   `,
 ];
 
-// v2 迁移：编辑原文件功能 —— 文档保存解析后的 Markdown
+// v2/v3 迁移：文档保存源 Markdown 与标准 Markdown 快照
 // 用单独函数 + PRAGMA user_version 跟踪版本，避免重复执行 ALTER 失败
 const MIGRATIONS_V2 = [
   `ALTER TABLE documents ADD COLUMN extracted_markdown TEXT;`,
+  `ALTER TABLE documents ADD COLUMN standard_markdown TEXT;`,
+];
+
+// v4: 文档描述
+const MIGRATIONS_V4 = [
+  `ALTER TABLE documents ADD COLUMN description TEXT;`,
 ];
 
 function runMigrations(): void {
@@ -81,8 +87,17 @@ function runMigrations(): void {
     try {
       d.exec(sql);
     } catch (e) {
-      // 重复执行已应用的迁移时静默忽略（如列已存在）
-      // eslint-disable-next-line no-console
+      console.warn(`[migrations] v${v + 2} skipped:`, (e as Error).message);
+    }
+    d.pragma(`user_version = ${v + 1}`);
+  }
+  for (let v = Math.max(currentVersion, MIGRATIONS_V2.length);
+       v < MIGRATIONS_V2.length + MIGRATIONS_V4.length; v++) {
+    const sql = MIGRATIONS_V4[v - MIGRATIONS_V2.length];
+    if (!sql) continue;
+    try {
+      d.exec(sql);
+    } catch (e) {
       console.warn(`[migrations] v${v + 2} skipped:`, (e as Error).message);
     }
     d.pragma(`user_version = ${v + 1}`);
@@ -140,15 +155,70 @@ export function getDocument(id: number): Document | undefined {
     | undefined;
 }
 
-// 更新文档的 Markdown 文本（编辑原文件功能）
+// 更新文档的源 Markdown。源 Markdown 一旦变化，旧的标准快照必须失效。
 export function setExtractedMarkdown(id: number, markdown: string): void {
   getDb()
-    .prepare(`UPDATE documents SET extracted_markdown = ? WHERE id = ?`)
+    .prepare(`UPDATE documents SET extracted_markdown = ?, standard_markdown = NULL WHERE id = ?`)
+    .run(markdown, id);
+}
+
+export function setStandardMarkdown(id: number, markdown: string): void {
+  getDb()
+    .prepare(`UPDATE documents SET standard_markdown = ? WHERE id = ?`)
     .run(markdown, id);
 }
 
 export function deleteDocument(id: number): void {
   getDb().prepare(`DELETE FROM documents WHERE id = ?`).run(id);
+}
+
+export function updateDocument(
+  id: number,
+  patch: { title?: string; description?: string | null },
+): Document {
+  const fields: string[] = [];
+  const values: unknown[] = [];
+  if (patch.title !== undefined) {
+    fields.push('title = ?');
+    values.push(patch.title);
+  }
+  if (patch.description !== undefined) {
+    fields.push('description = ?');
+    values.push(patch.description);
+  }
+  if (fields.length === 0) return getDocument(id)!;
+  values.push(id);
+  getDb()
+    .prepare(`UPDATE documents SET ${fields.join(', ')} WHERE id = ?`)
+    .run(...values);
+  return getDocument(id)!;
+}
+
+export function insertDocumentFromMarkdown(
+  title: string,
+  markdown: string,
+  description?: string,
+): Document {
+  const d = getDb();
+  const now = Date.now();
+  const filePath = `markdown:${title}`;
+  const info = d
+    .prepare(
+      `INSERT INTO documents (file_path, file_type, title, description, imported_at, question_count, extracted_markdown)
+       VALUES (?, 'md', ?, ?, ?, 0, ?)`,
+    )
+    .run(filePath, title, description ?? null, now, markdown);
+  return {
+    id: info.lastInsertRowid as number,
+    file_path: filePath,
+    file_type: 'md',
+    title,
+    description: description ?? null,
+    imported_at: now,
+    question_count: 0,
+    extracted_markdown: markdown,
+    standard_markdown: null,
+  };
 }
 
 export function updateQuestionCount(docId: number): void {

@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
+  ClipboardCheck,
+  Pencil,
+  Plus,
   Upload,
   ScanLine,
   Play,
@@ -13,6 +16,8 @@ import {
   Inbox,
   FileText,
   RotateCcw,
+  Copy,
+  Download,
 } from 'lucide-react';
 import { normalizeMarkdownStandardLanguage } from '@shared/markdown-standard';
 import type {
@@ -23,12 +28,14 @@ import type {
   OverallStats,
   Question,
 } from '@shared/types';
+import { renderPracticeResultsMarkdown } from '@shared/openstudy-standard';
 import { EmptyState } from '../components/EmptyState';
 import { PageHeader } from '../components/PageHeader';
 import { LoadingState } from '../components/LoadingState';
 import { useToast } from '../components/ToastProvider';
 import { clearStoredAttempts } from '../utils/practice-attempts';
 import { clearPracticeChatSessionsByDocument } from '../utils/practice-chat';
+import { Modal } from '../components/Modal';
 
 function pct(n: number | null): string {
   if (n == null) return '—';
@@ -60,6 +67,15 @@ export default function Library() {
   const [progressByDoc, setProgressByDoc] = useState<Record<number, ProgressState>>({});
   const [identifyReports, setIdentifyReports] = useState<Record<number, IdentifyQualityReport>>({});
   const [loading, setLoading] = useState(true);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [createName, setCreateName] = useState('');
+  const [createDesc, setCreateDesc] = useState('');
+  const [createMd, setCreateMd] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [editDoc, setEditDoc] = useState<Document | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+  const [saving, setSaving] = useState(false);
 
   const navigate = useNavigate();
   const toast = useToast();
@@ -198,6 +214,45 @@ export default function Library() {
     }
   }
 
+  async function onExportMarkdown(doc: Document, mode: 'copy' | 'download') {
+    try {
+      const [questions, snapshots] = await Promise.all([
+        window.api.getQuestionsByDocument(doc.id),
+        window.api.listAttemptsByDocument?.(doc.id) ?? [],
+      ]);
+      const attemptMap: Record<number, { userAnswer: string; isCorrect: boolean }> = {};
+      let correct = 0;
+      let wrong = 0;
+      for (const a of snapshots) {
+        attemptMap[a.question_id] = { userAnswer: a.user_answer, isCorrect: a.is_correct };
+        if (a.is_correct) correct++;
+        else wrong++;
+      }
+      const md = renderPracticeResultsMarkdown(doc.title, questions, attemptMap, {
+        correct,
+        wrong,
+        total: correct + wrong,
+      });
+
+      if (mode === 'copy') {
+        await navigator.clipboard.writeText(md);
+        toast.show('success', t('practice.completion.copied'));
+      } else {
+        const filename = `${doc.title.replace(/[/\\?%*:|"<>]/g, '_')}-practice.md`;
+        const blob = new Blob([md], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.show('success', t('practice.completion.exported'));
+      }
+    } catch (e) {
+      toast.show('error', t('templates.copyFailed'));
+    }
+  }
+
   async function onResetProgress(docId: number) {
     if (!confirm(t('library.reset.confirm'))) return;
     try {
@@ -207,6 +262,51 @@ export default function Library() {
       await refresh();
     } catch (e) {
       setError({ kind: 'error', message: (e as Error).message });
+    }
+  }
+
+  function openCreate() {
+    setCreateName('');
+    setCreateDesc('');
+    setCreateMd('');
+    setCreateOpen(true);
+  }
+
+  async function onCreateDocument() {
+    if (!createName.trim()) return;
+    setCreating(true);
+    try {
+      await window.api.createDocumentFromMarkdown(createName.trim(), createMd, createDesc.trim() || undefined);
+      setCreateOpen(false);
+      toast.show('success', t('library.toast.imported', { title: createName.trim() }));
+      await refresh();
+    } catch (e) {
+      setError({ kind: 'error', message: (e as Error).message });
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  function openEdit(doc: Document) {
+    setEditDoc(doc);
+    setEditName(doc.title);
+    setEditDesc(doc.description ?? '');
+  }
+
+  async function onSaveEdit() {
+    if (!editDoc || !editName.trim()) return;
+    setSaving(true);
+    try {
+      await window.api.updateDocument(editDoc.id, {
+        title: editName.trim(),
+        description: editDesc.trim() || null,
+      });
+      setEditDoc(null);
+      await refresh();
+    } catch (e) {
+      setError({ kind: 'error', message: (e as Error).message });
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -228,6 +328,14 @@ export default function Library() {
               ) : (
                 <Upload size={16} />
               )}
+            </button>
+            <button
+              className="primary icon-only"
+              onClick={openCreate}
+              aria-label={t('library.actions.createDoc')}
+              title={t('library.actions.createDoc')}
+            >
+              <Plus size={16} />
             </button>
             <span className="sr-only" aria-live="polite">
               {importing ? t('library.importing') : ''}
@@ -346,6 +454,15 @@ export default function Library() {
                   >
                     {d.title}
                   </strong>
+                  <button
+                    className="ghost icon-only"
+                    onClick={() => openEdit(d)}
+                    aria-label={t('library.actions.rename')}
+                    title={t('library.actions.rename')}
+                    style={{ padding: 2 }}
+                  >
+                    <Pencil size={12} />
+                  </button>
                   <span className="badge">{d.file_type.toUpperCase()}</span>
                 </div>
                 <div
@@ -357,6 +474,11 @@ export default function Library() {
                     time: new Date(d.imported_at).toLocaleString(i18n.language),
                   })}
                 </div>
+                {d.description && (
+                  <div style={{ marginTop: 2, fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>
+                    {d.description}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -470,6 +592,15 @@ export default function Library() {
               </button>
               <button
                 className="icon-only"
+                disabled={d.question_count === 0 || isBusy}
+                onClick={() => navigate(`/exam/${d.id}`)}
+                title={t('exam.title')}
+                aria-label={t('exam.title')}
+              >
+                <ClipboardCheck size={16} />
+              </button>
+              <button
+                className="icon-only"
                 disabled={isBusy || isDeleting}
                 onClick={() => onIdentify(d.id)}
                 title={
@@ -507,6 +638,24 @@ export default function Library() {
               >
                 <RotateCcw size={16} />
               </button>
+              <button
+                disabled={isDeleting}
+                onClick={() => onExportMarkdown(d, 'copy')}
+                title={t('practice.completion.copyMarkdown')}
+                aria-label={t('practice.completion.copyMarkdown')}
+                className="icon-only"
+              >
+                <Copy size={16} />
+              </button>
+              <button
+                disabled={isDeleting}
+                onClick={() => onExportMarkdown(d, 'download')}
+                title={t('practice.completion.exportMarkdown')}
+                aria-label={t('practice.completion.exportMarkdown')}
+                className="icon-only"
+              >
+                <Download size={16} />
+              </button>
               <div style={{ flex: 1 }} />
               <button
                 className="danger icon-only"
@@ -529,6 +678,62 @@ export default function Library() {
           </div>
         );
       })}
+
+      <Modal open={createOpen} title={t('library.create.title')} onClose={() => setCreateOpen(false)}>
+        <label className="modal-label">{t('library.create.nameLabel')}</label>
+        <input
+          className="input"
+          value={createName}
+          onChange={(e) => setCreateName(e.target.value)}
+          placeholder={t('library.create.namePlaceholder')}
+          autoFocus
+        />
+        <label className="modal-label">{t('library.create.descLabel')}</label>
+        <input
+          className="input"
+          value={createDesc}
+          onChange={(e) => setCreateDesc(e.target.value)}
+          placeholder={t('library.create.descPlaceholder')}
+        />
+        <label className="modal-label">{t('library.create.markdownLabel')}</label>
+        <textarea
+          className="input"
+          value={createMd}
+          onChange={(e) => setCreateMd(e.target.value)}
+          placeholder={t('library.create.markdownPlaceholder')}
+          rows={12}
+        />
+        <div className="modal-actions">
+          <button className="ghost" onClick={() => setCreateOpen(false)}>{t('common.cancel')}</button>
+          <button className="primary" disabled={creating || !createName.trim()} onClick={onCreateDocument}>
+            {creating ? t('library.create.creating') : t('library.create.create')}
+          </button>
+        </div>
+      </Modal>
+
+      <Modal open={editDoc !== null} title={t('library.edit.title')} onClose={() => setEditDoc(null)}>
+        <label className="modal-label">{t('library.edit.nameLabel')}</label>
+        <input
+          className="input"
+          value={editName}
+          onChange={(e) => setEditName(e.target.value)}
+          placeholder={t('library.create.namePlaceholder')}
+          autoFocus
+        />
+        <label className="modal-label">{t('library.edit.descLabel')}</label>
+        <input
+          className="input"
+          value={editDesc}
+          onChange={(e) => setEditDesc(e.target.value)}
+          placeholder={t('library.edit.descPlaceholder')}
+        />
+        <div className="modal-actions">
+          <button className="ghost" onClick={() => setEditDoc(null)}>{t('common.cancel')}</button>
+          <button className="primary" disabled={saving || !editName.trim()} onClick={onSaveEdit}>
+            {saving ? t('library.edit.saving') : t('library.edit.save')}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -29,7 +29,10 @@ vi.mock('../../src/main/services/llm/index.js', () => ({
         },
 }));
 
-import { identifyQuestions } from '../../src/main/services/identifier.js';
+import {
+  identifyQuestions,
+  standardizeMarkdownDocument,
+} from '../../src/main/services/identifier.js';
 import type { Document } from '../../src/shared/types.js';
 
 const fakeDoc: Document = {
@@ -60,6 +63,34 @@ describe('identifyQuestions', () => {
     expect(result).toHaveLength(1);
   });
 
+  it('已经是标准 Markdown 时直接本地结构化，不再调用 LLM', async () => {
+    const result = await identifyQuestions({
+      ...fakeDoc,
+      extracted_markdown: `## 单选题
+
+<!-- QUESTION_ID:q1 -->
+### 1. 哪个注解用于控制层切片测试？
+
+- A. @SpringBootTest
+- B. @WebMvcTest
+
+Type: choice
+Answer: B
+Explanation: @WebMvcTest 用于控制层切片测试。`,
+    });
+
+    expect(parseFileMock).not.toHaveBeenCalled();
+    expect(identifyMock).not.toHaveBeenCalled();
+    expect(identifyMarkdownMock).not.toHaveBeenCalled();
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      source_id: 'q1',
+      type: 'choice',
+      answer: 'B',
+      options: ['@SpringBootTest', '@WebMvcTest'],
+    });
+  });
+
   it('会先让 AI 输出标准 Markdown，再由本地结构化成题目', async () => {
     markdownMode.enabled = true;
     parseFileMock.mockResolvedValue({ text: 'Java 复习题', pageCount: 1 });
@@ -84,6 +115,23 @@ Explanation: @WebMvcTest 用于控制层切片测试。
       options: ['@SpringBootTest', '@WebMvcTest'],
       answer: 'B',
     });
+  });
+
+  it('可以把源 Markdown 推进成标准 Markdown 快照', async () => {
+    markdownMode.enabled = true;
+    const markdown = await standardizeMarkdownDocument(
+      {
+        ...fakeDoc,
+        extracted_markdown: '1. 哪个注解用于控制层切片测试？\nA. @SpringBootTest\nB. @WebMvcTest\n答案：B',
+      },
+      '1. 哪个注解用于控制层切片测试？\nA. @SpringBootTest\nB. @WebMvcTest\n答案：B',
+      { standardLang: 'zh' },
+    );
+
+    expect(identifyMarkdownMock).not.toHaveBeenCalled();
+    expect(markdown).toContain('## 单选题');
+    expect(markdown).toContain('Type: choice');
+    expect(markdown).toContain('Answer: B');
   });
 
   it('大文档自动切片并发调用（每个 chunk 一个提示）', async () => {
@@ -117,31 +165,49 @@ Explanation: @WebMvcTest 用于控制层切片测试。
     expect(result.length).toBeGreaterThan(0);
   });
 
-  it('格式明确的多题文档先切成 Markdown 题块，再由 LLM 结构化', async () => {
+  it('格式明确的多题文档优先本地结构化，不再调用 LLM', async () => {
     const dense = Array.from(
       { length: 10 },
       (_, i) => `${i + 1}. 第${i + 1}题题干\nA. 选项甲\nB. 选项乙\n答案：A`,
     ).join('\n');
     parseFileMock.mockResolvedValue({ text: dense, pageCount: 1 });
-    identifyMock.mockImplementation(async (input: { text?: string }) => [
+
+    const result = await identifyQuestions(fakeDoc);
+    expect(result).toHaveLength(10);
+    expect(identifyMock).not.toHaveBeenCalled();
+    expect(result[0]).toMatchObject({
+      type: 'choice',
+      stem: '第1题题干',
+      answer: 'A',
+    });
+  });
+
+  it('结构化文档会先本地解析，只有残缺题块才交给 AI 补全', async () => {
+    parseFileMock.mockResolvedValue({
+      text: `1. 第一题\nA. 甲\nB. 乙\n答案：A\n\n2. 第二题没有显式答案`,
+      pageCount: 1,
+    });
+    identifyMock.mockResolvedValue([
       {
-        type: 'choice' as const,
-        stem: `chunk-${(input.text ?? '').slice(0, 12)}`,
-        options: ['A', 'B'],
-        answer: 'A',
+        source_id: 'q2',
+        type: 'short' as const,
+        stem: '第二题没有显式答案',
+        answer: '由 AI 补全的参考答案',
       },
     ]);
 
     const result = await identifyQuestions(fakeDoc);
-    expect(result).toHaveLength(10);
-    expect(identifyMock.mock.calls.length).toBeGreaterThan(1);
-    expect((identifyMock.mock.calls[0][0] as { text: string }).text).toContain('QUESTION_ID');
+    expect(result).toHaveLength(2);
+    expect(identifyMock).toHaveBeenCalledTimes(1);
+    expect((identifyMock.mock.calls[0][0] as { text: string }).text).toContain('QUESTION_ID:q2');
+    expect(result.map((item) => item.stem)).toEqual(['第一题', '第二题没有显式答案']);
+    expect(result[1]?.answer).toBe('由 AI 补全的参考答案');
   });
 
   it('批量识别通过 source_id 与 Markdown 题块精确对应', async () => {
     const dense = Array.from(
       { length: 4 },
-      (_, i) => `${i + 1}. 第${i + 1}题题干\nA. 选项甲\nB. 选项乙\n答案：A`,
+      (_, i) => `${i + 1}. 第${i + 1}题题干\nA. 选项甲\nB. 选项乙`,
     ).join('\n');
     parseFileMock.mockResolvedValue({ text: dense, pageCount: 1 });
     identifyMock.mockImplementation(async (input: { text?: string }) => {
@@ -164,7 +230,7 @@ Explanation: @WebMvcTest 用于控制层切片测试。
     markdownMode.enabled = true;
     const dense = Array.from(
       { length: 4 },
-      (_, i) => `${i + 1}. 第${i + 1}题题干\nA. 选项甲\nB. 选项乙\n答案：A`,
+      (_, i) => `${i + 1}. 第${i + 1}题题干\nA. 选项甲\nB. 选项乙`,
     ).join('\n');
     parseFileMock.mockResolvedValue({ text: dense, pageCount: 1 });
     identifyMarkdownMock.mockImplementation(async (input: { text?: string }) => {
@@ -192,7 +258,7 @@ Answer: A
   it('101 道题会稳定分批且全部通过 source_id 回收', async () => {
     const dense = Array.from(
       { length: 101 },
-      (_, i) => `${i + 1}. 第${i + 1}题\nA. 甲\nB. 乙\n答案：A`,
+      (_, i) => `${i + 1}. 第${i + 1}题\nA. 甲\nB. 乙`,
     ).join('\n');
     parseFileMock.mockResolvedValue({ text: dense, pageCount: 1 });
     identifyMock.mockImplementation(async (input: { text?: string }) =>

@@ -232,7 +232,7 @@ openstudy ingest <file> [--title TITLE] [--lang zh|en] [--skip-identify]
   <summary><strong>Documents and Markdown</strong></summary>
 
 ```bash
-openstudy docs list
+openstudy docs list [--format json|table]
 openstudy docs import <file> [--title TITLE]
 openstudy markdown get <docId> [--output out.md]
 openstudy markdown set <docId> <file.md>
@@ -247,7 +247,7 @@ openstudy markdown set <docId> <file.md>
 openstudy questions identify <docId> [--lang zh|en]
 openstudy questions list <docId> [--format json|table]
 openstudy questions export <docId> [--format json|markdown] [--output file]
-openstudy validate <file.(md|json)> [--format markdown|json]
+openstudy validate <file.(md|json)> [--format markdown|json] [--lang zh|en]
 openstudy exam import <docId> <file.(md|json)>
 openstudy standards schema [--print]
 openstudy standards markdown [--lang zh|en]
@@ -263,8 +263,8 @@ openstudy attempts add <questionId> --answer "..." [--correct]
 openstudy attempts wrong
 openstudy attempts recent [--limit 20]
 openstudy attempts clear --all | --doc <docId> | --question <questionId>
-openstudy stats overall
-openstudy stats doc <docId>
+openstudy stats overall [--format json|table]
+openstudy stats doc <docId> [--format json|table]
 ```
 
 </details>
@@ -337,8 +337,51 @@ Build outputs are written to `release/<version>/`.
 - [x] Keep Markdown as the canonical editable study format.
 - [x] Support document ingestion through MarkItDown and a shared CLI workflow.
 - [x] Ship normalized installers for Windows, Apple Silicon macOS, and Linux.
+- [x] Exam mode with timer, deferred grading, and batch submission.
+- [x] Claude Code Skill integration with 10 slash commands and full workflow support.
 - [ ] Improve OCR- and vision-heavy import quality beyond the base MarkItDown environment.
 - [ ] Add smarter handling for very large study sets that exceed model-context limits.
+
+## Product Pillars
+
+OpenStudy ships across four complementary surfaces, each at a different maturity level:
+
+| Pillar | What It Is | Status |
+|--------|-----------|--------|
+| **Desktop** | Electron app — library, practice, exam, insights, settings | ~90% |
+| **CLI** | `openstudy` command — ingest, convert, validate, export, stats, AI | ~85% |
+| **Skill** | Claude Code slash commands — 10 `/openstudy:*` commands + workflow orchestration | ~80% |
+| **Standard** | OpenStudy Markdown/JSON format — dual-layer, schema-validated, six question types | ~80% |
+
+### Claude Code Skill Integration
+
+The project ships 10 installable slash commands under `.claude/skills/openstudy/` so you can operate the entire study workflow directly inside Claude Code, Codex, or OpenClaw:
+
+| Command | Action |
+|---------|--------|
+| `/openstudy:ingest` | Import a document and identify questions |
+| `/openstudy:identify` | Run AI question identification on a document |
+| `/openstudy:exam` | Import a Standard Markdown/JSON question set |
+| `/openstudy:export` | Export questions as Standard Markdown or JSON |
+| `/openstudy:validate` | Validate question format against the OpenStudy standard |
+| `/openstudy:grade` | Grade short-answer and fill-in-the-blank answers with AI |
+| `/openstudy:insights` | Generate AI study insights from wrong-answer history |
+| `/openstudy:stats` | View overall or per-document learning statistics |
+| `/openstudy:doctor` | Diagnose CLI environment and dependencies |
+| `/openstudy:settings` | View or change LLM configuration |
+
+The main entry point `/openstudy` also includes a full question-generation specification — type selection strategy, per-type writing guidelines, difficulty calibration, and a quality checklist — so the AI can produce well-formed question sets from your knowledge material.
+
+See [`STUDY.md`](STUDY.md) for the complete Skill documentation and format specification.
+
+## Exam Mode
+
+The desktop app supports two study modes:
+
+- **Practice Mode** — per-question immediate feedback, AI help, peek-at-answer, correct/wrong navigation. Best for learning and review.
+- **Exam Mode** — no immediate feedback, no AI help, no peek-at-answer, timer, batch grading at submit, can change answers before submit, localStorage persistence. Best for self-assessment and testing.
+
+Navigate to any document in the Library and click the exam button (clipboard icon) to start an exam session.
 
 ## Contributing
 

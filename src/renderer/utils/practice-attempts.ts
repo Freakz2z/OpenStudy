@@ -78,3 +78,73 @@ export function clearStoredAttempts(docId: number): void {
     // ignore local persistence errors
   }
 }
+
+/* ---- Exam state helpers ---- */
+
+const EXAM_STORAGE_PREFIX = 'openstudy:exam';
+
+function examAnswersKey(docId: number): string {
+  return `${EXAM_STORAGE_PREFIX}:${docId}:answers`;
+}
+
+function examStartTimeKey(docId: number): string {
+  return `${EXAM_STORAGE_PREFIX}:${docId}:startTime`;
+}
+
+export function loadExamAnswers(docId: number): Record<number, string> {
+  try {
+    const raw = window.localStorage.getItem(examAnswersKey(docId));
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return {};
+    const map: Record<number, string> = {};
+    for (const item of parsed) {
+      const entry = item as { questionId?: number; userAnswer?: string };
+      if (typeof entry.questionId === 'number' && typeof entry.userAnswer === 'string' && entry.userAnswer.trim()) {
+        map[entry.questionId] = entry.userAnswer;
+      }
+    }
+    return map;
+  } catch {
+    return {};
+  }
+}
+
+export function saveExamAnswers(docId: number, answers: Record<number, string>): void {
+  try {
+    const payload = Object.entries(answers)
+      .filter(([, v]) => v.trim())
+      .map(([k, v]) => ({ questionId: Number(k), userAnswer: v }));
+    window.localStorage.setItem(examAnswersKey(docId), JSON.stringify(payload));
+  } catch {
+    // ignore local persistence errors
+  }
+}
+
+export function loadExamStartTime(docId: number): number | null {
+  try {
+    const raw = window.localStorage.getItem(examStartTimeKey(docId));
+    if (!raw) return null;
+    const n = Number(raw);
+    return Number.isFinite(n) && n > 0 ? n : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveExamStartTime(docId: number, startTime: number): void {
+  try {
+    window.localStorage.setItem(examStartTimeKey(docId), String(startTime));
+  } catch {
+    // ignore local persistence errors
+  }
+}
+
+export function clearExamState(docId: number): void {
+  try {
+    window.localStorage.removeItem(examAnswersKey(docId));
+    window.localStorage.removeItem(examStartTimeKey(docId));
+  } catch {
+    // ignore local persistence errors
+  }
+}

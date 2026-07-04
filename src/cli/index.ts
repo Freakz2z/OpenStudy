@@ -180,14 +180,34 @@ async function handleIngest(args: string[]): Promise<void> {
 
 async function handleDocs(subcommand: string | undefined, args: string[]): Promise<void> {
   switch (subcommand) {
-    case 'list':
-      printJson(
-        listDocuments().map(({ extracted_markdown, ...doc }) => ({
-          ...doc,
-          hasExtractedMarkdown: Boolean(extracted_markdown?.trim()),
-        })),
-      );
+    case 'list': {
+      const parsed = parseArgs({
+        args,
+        allowPositionals: true,
+        options: {
+          format: { type: 'string' },
+        },
+      });
+      const docs = listDocuments().map(({ extracted_markdown, standard_markdown, ...doc }) => ({
+        ...doc,
+        hasExtractedMarkdown: Boolean(extracted_markdown?.trim()),
+        hasStandardMarkdown: Boolean(standard_markdown?.trim()),
+      }));
+      if (parsed.values.format === 'table') {
+        console.table(
+          docs.map((d) => ({
+            ID: d.id,
+            标题: d.title,
+            类型: d.file_type.toUpperCase(),
+            题目数: d.question_count,
+            导入时间: new Date(d.imported_at).toLocaleString('zh-CN'),
+          })),
+        );
+      } else {
+        printJson(docs);
+      }
       return;
+    }
     case 'import': {
       const parsed = parseArgs({
         args,
@@ -266,7 +286,19 @@ async function handleQuestions(subcommand: string | undefined, args: string[]): 
         },
       });
       const docId = Number(requirePositional(parsed.positionals[0], '请提供 docId'));
-      emitStructured(listQuestionsByDocument(docId), normalizeOutputFormat(parsed.values.format));
+      const questions = listQuestionsByDocument(docId);
+      if (parsed.values.format === 'table') {
+        console.table(
+          questions.map((q) => ({
+            ID: q.id,
+            题型: q.type,
+            题干: q.stem.length > 60 ? q.stem.slice(0, 60) + '...' : q.stem,
+            答案: q.answer,
+          })),
+        );
+      } else {
+        printJson(questions);
+      }
       return;
     }
     case 'export': {
@@ -422,13 +454,46 @@ async function handleAttempts(subcommand: string | undefined, args: string[]): P
 }
 
 async function handleStats(subcommand: string | undefined, args: string[]): Promise<void> {
+  const parsed = parseArgs({
+    args,
+    allowPositionals: true,
+    options: {
+      format: { type: 'string' },
+    },
+  });
+  const fmt = normalizeOutputFormat(parsed.values.format);
   switch (subcommand) {
-    case 'overall':
-      printJson(getOverallStats());
+    case 'overall': {
+      const s = getOverallStats();
+      if (fmt === 'table') {
+        console.table({
+          文档数: s.document_count,
+          题目总数: s.question_count,
+          已做题数: s.attempted_count,
+          错题数: s.wrong_count,
+          正确率: `${Math.round(s.accuracy * 100)}%`,
+        });
+      } else {
+        printJson(s);
+      }
       return;
-    case 'doc':
-      printJson(getDocumentStats(Number(requirePositional(args[0], '请提供 docId'))));
+    }
+    case 'doc': {
+      const docId = Number(requirePositional(parsed.positionals[0], '请提供 docId'));
+      const s = getDocumentStats(docId);
+      if (fmt === 'table') {
+        console.table({
+          题目数: s.question_count,
+          已做题数: s.attempted_count,
+          正确数: s.correct_count,
+          错误数: s.wrong_count,
+          正确率: `${Math.round(s.accuracy * 100)}%`,
+        });
+      } else {
+        printJson(s);
+      }
       return;
+    }
     default:
       throw new Error('stats 支持: overall | doc');
   }
@@ -661,21 +726,21 @@ function printHelp(): void {
   openstudy setup markitdown [--spec "markitdown[all]"]
   openstudy convert <file> [--output out.md] [--lang zh|en]
   openstudy ingest <file> [--title TITLE] [--lang zh|en] [--skip-identify]
-  openstudy docs list
+  openstudy docs list [--format json|table]
   openstudy docs import <file> [--title TITLE]
   openstudy markdown get <docId> [--output out.md]
   openstudy markdown set <docId> <file.md>
   openstudy questions identify <docId> [--lang zh|en]
   openstudy questions list <docId> [--format json|table]
   openstudy questions export <docId> [--format json|markdown] [--output file]
-  openstudy validate <file.(md|json)> [--format markdown|json]
+  openstudy validate <file.(md|json)> [--format markdown|json] [--lang zh|en]
   openstudy exam import <docId> <file.(md|json)>
   openstudy attempts add <questionId> --answer "..." [--correct]
   openstudy attempts wrong
   openstudy attempts recent [--limit 20]
   openstudy attempts clear --all | --doc <docId> | --question <questionId>
-  openstudy stats overall
-  openstudy stats doc <docId>
+  openstudy stats overall [--format json|table]
+  openstudy stats doc <docId> [--format json|table]
   openstudy ai test
   openstudy ai ask <questionId> --prompt "..."
   openstudy ai grade <questionId> --answer "..." [--save]
@@ -688,6 +753,19 @@ function printHelp(): void {
 }
 
 main().catch((error) => {
-  console.error(`[openstudy] ${(error as Error).message}`);
+  const msg = (error as Error).message;
+  printJson({ ok: false, error: msg });
+  // Suggest common fixes
+  if (msg.includes('LLM') || msg.includes('API')) {
+    process.stderr.write('提示: 检查 LLM 配置 (npx tsx src/cli/index.ts settings show)\n');
+  } else if (msg.includes('文件') || msg.includes('ENOENT')) {
+    process.stderr.write('提示: 检查文件路径是否正确\n');
+  } else if (msg.includes('不支持的文件类型')) {
+    process.stderr.write('提示: 支持的类型有 txt, md, pdf, docx, pptx, html, csv, xlsx, epub\n');
+  } else if (msg.includes('文档不存在')) {
+    process.stderr.write('提示: 使用 docs list 查看所有文档 ID\n');
+  } else if (msg.includes('题目不存在')) {
+    process.stderr.write('提示: 使用 questions list <docId> 查看文档下的题目\n');
+  }
   process.exitCode = 1;
 });

@@ -61,6 +61,26 @@ test.describe('Practice 页面', () => {
     ).toBeVisible();
   });
 
+  test('选项 hover 时不发生位移', async ({ page }) => {
+    await installApiMock(page, {
+      questions: [sampleQuestions[0]],
+      documents: [],
+    });
+    await page.goto('/#/practice/2');
+    await page.waitForTimeout(400);
+
+    const option = page.locator('label').filter({ hasText: 'B. 北京' });
+    const before = await option.boundingBox();
+    expect(before).not.toBeNull();
+
+    await option.hover();
+    const after = await option.boundingBox();
+    expect(after).not.toBeNull();
+
+    expect(Math.abs((after?.x ?? 0) - (before?.x ?? 0))).toBeLessThan(0.5);
+    expect(Math.abs((after?.y ?? 0) - (before?.y ?? 0))).toBeLessThan(0.5);
+  });
+
   test('无题目时显示空状态', async ({ page }) => {
     await installApiMock(page, { questions: [], documents: [] });
     await page.goto('/#/practice/2');

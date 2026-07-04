@@ -55,6 +55,8 @@ describe('OpenStudy standard conversions', () => {
   it('renders markdown in OpenStudy standard layout', () => {
     const markdown = renderOpenStudyMarkdown(sampleQuestions, 'zh');
     expect(markdown).toContain('## 单选题');
+    expect(markdown).toContain('- A. @SpringBootTest');
+    expect(markdown).toContain('- B. @WebMvcTest');
     expect(markdown).toContain('Type: choice');
     expect(markdown).toContain('Answer: B');
     expect(markdown).toContain('## 简答题');

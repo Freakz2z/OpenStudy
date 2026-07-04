@@ -4,6 +4,33 @@ All notable changes to this project will be documented in this file.
 
 The format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), but stays lightweight for a fast-moving desktop project.
 
+## [0.3.0] - 2026-07-04
+
+### Added
+
+- **Exam mode** — new `/exam/:docId` route with timer, deferred grading, batch submission at submit, ability to change answers before submit, and localStorage persistence for recovery on accidental close
+- **Document create from Markdown** — "+" button in Library to create a document by pasting Standard Markdown content with custom title and optional description
+- **Document rename and description** — edit title and description on existing documents via modal, with DB migration adding a `description` column
+- **Modal component** — reusable overlay modal with Escape and click-outside-to-close support
+- **Claude Code Skill integration** — 11 Skill files under `.claude/skills/openstudy/` implementing 10 `/openstudy:*` slash commands plus a comprehensive main entry point with question-generation specification (type selection strategy, per-type writing guidelines, difficulty calibration, quality checklist)
+- **CLI table output** — `--format table` for `docs list`, `questions list`, `stats overall`, and `stats doc` commands
+- **CLI error hints** — actionable suggestions printed alongside error messages based on error type (LLM config, file path, document ID, etc.)
+
+### Changed
+
+- QuestionCard and QuestionNav components accept an `examMode` prop to suppress immediate feedback and adapt navigation state
+- Library PageHeader now includes a "+" button alongside the import button for creating documents from Markdown
+- CLI `stats` command accepts `--format json|table`
+- CLI `docs list` command accepts `--format json|table`
+- CLI error output now includes contextual fix hints
+- CHANGELOG, README, and README.zh-CN updated with product pillars, Skill integration, and exam mode documentation
+
+### Notes
+
+- Exam mode and practice mode share the same grading pipeline; exam mode defers all grading to the submit step and batches attempts
+- All Skill files use the Standard Markdown format documented in STUDY.md; the main skill includes a full question-generation specification
+- DB migration V4 adds a `description TEXT` column to the `documents` table
+
 ## [0.2.1] - 2026-06-29
 
 ### Fixed

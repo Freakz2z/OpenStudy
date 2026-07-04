@@ -116,12 +116,12 @@ export function formatQuestionAnswerDisplay(
   answer: string | null | undefined,
   options?: string[] | null,
 ): string {
-  if (type === 'choice' || type === 'multiple' || type === 'judge') {
+  if (isOptionQuestion(type)) {
     return formatChoiceAnswerDisplay(answer, options);
   }
   return answer?.trim() ?? '';
 }
 
 export function isOptionQuestion(type: QuestionType): boolean {
-  return type === 'choice' || type === 'multiple' || type === 'judge';
+  return type === 'choice' || type === 'multiple' || type === 'judge' || type === 'code';
 }

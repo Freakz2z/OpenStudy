@@ -105,7 +105,7 @@ export function inferQuestionTypeFromHeading(
   if (/(?:填空题|fill\s+in\s+the\s+blank|fill\s+in\s+the\s+blanks)/.test(normalized)) {
     return 'fill';
   }
-  if (/(?:简答题|问答题|论述题|short\s+answer|essay)/.test(normalized)) {
+  if (/(?:简答题|问答题|论述题|名词解释|综合应用题|short\s+answer|essay)/.test(normalized)) {
     return 'short';
   }
   if (
@@ -156,7 +156,7 @@ export function normalizeQuestionTypeValue(
     return 'fill';
   }
   if (
-    /^(?:short|short answer|essay|subjective|简答|简答题|问答题|论述题)$/.test(normalized)
+    /^(?:short|short answer|essay|subjective|简答|简答题|问答题|论述题|名词解释|综合应用题)$/.test(normalized)
   ) {
     return 'short';
   }

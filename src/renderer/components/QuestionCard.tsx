@@ -11,6 +11,7 @@ import {
 } from '@shared/question-format';
 import {
   isAiAssistedQuestion,
+  isExactFillMatch,
   localCheckAnswer,
   localGradeAnswer,
 } from '@shared/practice-grading';
@@ -21,7 +22,9 @@ interface Props {
   initialAnswer?: string;
   shortcuts: ShortcutSettings;
   aiOpen?: boolean;
-  onSubmit: (userAnswer: string, isCorrect: boolean, feedback?: string | null) => void;
+  examMode?: boolean;
+  onSubmit?: (userAnswer: string, isCorrect: boolean, feedback?: string | null) => void;
+  onAnswerChange?: (userAnswer: string) => void;
   onPrev: () => void;
   onNext: () => void;
   hasPrev: boolean;
@@ -70,7 +73,9 @@ export default function QuestionCard({
   initialAnswer = '',
   shortcuts,
   aiOpen = false,
+  examMode = false,
   onSubmit,
+  onAnswerChange,
   onPrev,
   onNext,
   hasPrev,
@@ -119,6 +124,8 @@ export default function QuestionCard({
 
   const onSubmitRef = useRef(onSubmit);
   onSubmitRef.current = onSubmit;
+  const onAnswerChangeRef = useRef(onAnswerChange);
+  onAnswerChangeRef.current = onAnswerChange;
   const onNextRef = useRef(onNext);
   onNextRef.current = onNext;
   const submitCurrentAnswerRef = useRef<() => Promise<void>>(async () => {});
@@ -210,7 +217,24 @@ export default function QuestionCard({
     if (!nextAnswer || stateRef.current.submitting) return;
 
     setSubmittingState(true);
+
+    if (examMode) {
+      onAnswerChangeRef.current?.(nextAnswer);
+      setSubmittingState(false);
+      return;
+    }
+
     try {
+      if (isExactFillMatch(question, nextAnswer)) {
+        const reason = '答案与参考答案完全一致，已直接判定正确。';
+        setIsCorrect(true);
+        setFeedback(reason);
+        setRevealedState(true);
+        setRevealModeState('submitted');
+        onSubmit?.(nextAnswer, true, reason);
+        return;
+      }
+
       if (isAiAssistedQuestion(question.type)) {
         const fallback = localGradeAnswer(question, nextAnswer);
         const result = await window.api
@@ -233,7 +257,7 @@ export default function QuestionCard({
         setFeedback(result.reason || fallback.reason);
         setRevealedState(true);
         setRevealModeState('submitted');
-        onSubmit(nextAnswer, result.isCorrect, result.reason || fallback.reason);
+        onSubmit?.(nextAnswer, result.isCorrect, result.reason || fallback.reason);
         return;
       }
 
@@ -242,7 +266,7 @@ export default function QuestionCard({
       setFeedback(null);
       setRevealedState(true);
       setRevealModeState('submitted');
-      onSubmit(nextAnswer, ok, null);
+      onSubmit?.(nextAnswer, ok, null);
     } finally {
       setSubmittingState(false);
     }
@@ -297,6 +321,7 @@ export default function QuestionCard({
 
       if (
         !s.aiOpen &&
+        !examMode &&
         matchesShortcut(e, s.shortcuts.practiceRevealAnswer) &&
         !(inTextComposer && !hasAnyModifier(s.shortcuts.practiceRevealAnswer))
       ) {
@@ -307,7 +332,7 @@ export default function QuestionCard({
       }
 
       if (!s.aiOpen && matchesShortcut(e, s.shortcuts.practiceNext)) {
-        if (s.submitting || !s.revealed || !s.hasNext) return;
+        if (s.submitting || (!examMode && !s.revealed) || !s.hasNext) return;
         e.preventDefault();
         onNextRef.current();
         return;
@@ -530,30 +555,34 @@ export default function QuestionCard({
         )}
       </div>
 
-      <div className="practice-submit-row">
+      <div className={examMode ? 'exam-submit-row' : 'practice-submit-row'}>
         <button type="button" className="ghost" disabled={!hasPrev || submitting} onClick={onPrev}>
-          {t('practice.buttons.prev')}
+          {examMode ? t('exam.buttons.prev') : t('practice.buttons.prev')}
         </button>
         <button
           type="button"
           className="primary"
-          disabled={!canSubmit || revealed || submitting}
+          disabled={!canSubmit || (!examMode && revealed) || submitting}
           onClick={() => {
             void submitCurrentAnswer();
           }}
         >
-          {submitting ? t('practice.buttons.submitting') : t('practice.buttons.submit')}
+          {submitting
+            ? (examMode ? t('exam.buttons.saving') : t('practice.buttons.submitting'))
+            : (examMode ? t('exam.buttons.saveAnswer') : t('practice.buttons.submit'))}
         </button>
-        <button
-          type="button"
-          className="ghost"
-          disabled={revealed || submitting}
-          onClick={revealReferenceAnswer}
-        >
-          {t('practice.buttons.answer')}
-        </button>
+        {!examMode && (
+          <button
+            type="button"
+            className="ghost"
+            disabled={revealed || submitting}
+            onClick={revealReferenceAnswer}
+          >
+            {t('practice.buttons.answer')}
+          </button>
+        )}
         <button type="button" className="ghost" disabled={!hasNext || submitting} onClick={onNext}>
-          {t('practice.buttons.next')}
+          {examMode ? t('exam.buttons.next') : t('practice.buttons.next')}
         </button>
       </div>
     </div>

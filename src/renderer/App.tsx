@@ -6,6 +6,7 @@ import Overview from './pages/Overview';
 import Insights from './pages/Insights';
 import Library from './pages/Library';
 import Practice from './pages/Practice';
+import Exam from './pages/Exam';
 import WrongBook from './pages/WrongBook';
 import Logs from './pages/Logs';
 import Conversations from './pages/Conversations';
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="/insights" element={<Insights />} />
           <Route path="/library" element={<Library />} />
           <Route path="/practice/:docId" element={<Practice />} />
+          <Route path="/exam/:docId" element={<Exam />} />
           <Route path="/markdown/:docId" element={<MarkdownEditor />} />
           <Route path="/wrong" element={<WrongBook />} />
           <Route path="/logs" element={<Logs />} />

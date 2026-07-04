@@ -3,6 +3,8 @@ import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-
 import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft,
+  Copy,
+  Download,
   ListChecks,
   PartyPopper,
   RefreshCw,
@@ -13,12 +15,14 @@ import {
 import type { AppSettings, Question, QuestionAttemptSnapshot } from '@shared/types';
 import { DEFAULT_SHORTCUTS, normalizeShortcutSettings } from '@shared/shortcuts';
 import { formatQuestionAnswerDisplay } from '@shared/question-format';
+import { renderPracticeResultsMarkdown } from '@shared/openstudy-standard';
 import QuestionCard from '../components/QuestionCard';
 import { PageHeader } from '../components/PageHeader';
 import { LoadingState } from '../components/LoadingState';
 import { EmptyState } from '../components/EmptyState';
 import { QuestionNav, type QuestionStatus } from '../components/QuestionNav';
 import { PracticeAsk } from '../components/PracticeAsk';
+import { useToast } from '../components/ToastProvider';
 import {
   loadStoredAttempts,
   saveStoredAttempts,
@@ -90,6 +94,7 @@ export default function Practice() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useTranslation();
+  const toast = useToast();
   const fromWrong = searchParams.get('from') === 'wrong';
   const targetQuestionId = Number(searchParams.get('q'));
   const aiRequested = searchParams.get('ai') === '1';
@@ -105,6 +110,7 @@ export default function Practice() {
   const [aiOpen, setAiOpen] = useState(aiRequested);
   const [cardRevision, setCardRevision] = useState(0);
   const [shortcuts, setShortcuts] = useState(DEFAULT_SHORTCUTS);
+  const [docTitle, setDocTitle] = useState('');
 
   useEffect(() => {
     setAiOpen(aiRequested);
@@ -170,6 +176,11 @@ export default function Practice() {
             () => [],
           ),
         ]);
+        // Load document title
+        window.api.listDocuments().then((docs) => {
+          const doc = docs.find((d) => d.id === Number(docId));
+          if (doc && !cancelled) setDocTitle(doc.title);
+        }).catch(() => {});
         if (cancelled) return;
         const dbAttemptMap = buildAttemptMap(next, snapshots);
         const storedAttemptMap = buildStoredAttemptMap(next, loadStoredAttempts(Number(docId)));
@@ -236,6 +247,41 @@ export default function Practice() {
   );
 
   const remainingCount = Math.max(practiceList.length - attempts.length, 0);
+
+  const exportMarkdown = useMemo(() => {
+    const title = docTitle || `${t('practice.completion.docLabel', { id: Number(docId) })}`;
+    return renderPracticeResultsMarkdown(
+      title,
+      practiceList,
+      Object.fromEntries(
+        Object.entries(attemptMap).map(([qid, rec]) => [
+          Number(qid),
+          { userAnswer: rec.userAnswer, isCorrect: rec.isCorrect },
+        ]),
+      ),
+      { correct: done.correct, wrong: done.wrong, total: attempts.length },
+    );
+  }, [docTitle, practiceList, attemptMap, done, docId, t]);
+
+  function handleCopyMarkdown() {
+    navigator.clipboard
+      .writeText(exportMarkdown)
+      .then(() => toast.show('success', t('practice.completion.copied')))
+      .catch(() => toast.show('error', t('templates.copyFailed')));
+  }
+
+  function handleExportMarkdown() {
+    const title = docTitle || `doc-${docId}`;
+    const filename = `${title.replace(/[/\\?%*:|"<>]/g, '_')}-practice.md`;
+    const blob = new Blob([exportMarkdown], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.show('success', t('practice.completion.exported'));
+  }
 
   function restart() {
     setIdx(0);
@@ -330,6 +376,14 @@ export default function Practice() {
                 <span>{t('practice.completion.redoWrong', { count: wrongOnes.length })}</span>
               </button>
             )}
+            <button onClick={handleCopyMarkdown} title={t('practice.completion.copyMarkdown')}>
+              <Copy size={16} />
+              <span>{t('practice.completion.copyMarkdown')}</span>
+            </button>
+            <button onClick={handleExportMarkdown} title={t('practice.completion.exportMarkdown')}>
+              <Download size={16} />
+              <span>{t('practice.completion.exportMarkdown')}</span>
+            </button>
             <button onClick={() => navigate(backTarget)}>
               <ArrowLeft size={16} />
               <span>{backLabel}</span>
