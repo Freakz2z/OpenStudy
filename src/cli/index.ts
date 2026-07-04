@@ -471,7 +471,7 @@ async function handleStats(subcommand: string | undefined, args: string[]): Prom
           题目总数: s.question_count,
           已做题数: s.attempted_count,
           错题数: s.wrong_count,
-          正确率: `${Math.round(s.accuracy * 100)}%`,
+          正确率: s.accuracy != null ? `${Math.round(s.accuracy * 100)}%` : '—',
         });
       } else {
         printJson(s);
@@ -487,7 +487,7 @@ async function handleStats(subcommand: string | undefined, args: string[]): Prom
           已做题数: s.attempted_count,
           正确数: s.correct_count,
           错误数: s.wrong_count,
-          正确率: `${Math.round(s.accuracy * 100)}%`,
+          正确率: s.accuracy != null ? `${Math.round(s.accuracy * 100)}%` : '—',
         });
       } else {
         printJson(s);
