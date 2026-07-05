@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import type {
-  KeyboardEvent as ReactKeyboardEvent,
   PointerEvent as ReactPointerEvent,
 } from 'react';
 import { NavLink } from 'react-router-dom';
@@ -8,7 +7,6 @@ import { useTranslation } from 'react-i18next';
 import {
   BarChart3,
   BookOpen,
-  FileText,
   Info,
   Sparkles,
   Settings as SettingsIcon,
@@ -22,10 +20,6 @@ export default function Sidebar() {
     { to: '/overview', icon: BarChart3, label: t('nav.overview') },
     { to: '/insights', icon: Sparkles, label: t('nav.insights') },
     { to: '/library', icon: BookOpen, label: t('nav.library') },
-  ]), [t]);
-
-  const secondaryNav = useMemo(() => ([
-    { to: '/templates', icon: FileText, label: t('nav.templates') },
   ]), [t]);
 
   function applySidebarWidth(nextWidth: number) {
@@ -72,34 +66,10 @@ export default function Sidebar() {
     window.addEventListener('pointercancel', cleanup);
   }
 
-  function onResizeKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
-    if (event.key === 'ArrowLeft') {
-      event.preventDefault();
-      applySidebarWidth(sidebarWidth - 16);
-    }
-    if (event.key === 'ArrowRight') {
-      event.preventDefault();
-      applySidebarWidth(sidebarWidth + 16);
-    }
-  }
-
   return (
     <aside className="sidebar">
       <nav className="sidebar-nav sidebar-nav-primary" aria-label={t('nav.primary')}>
         {primaryNav.map(({ to, icon: Icon, label }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}
-          >
-            <Icon size={18} />
-            <span>{label}</span>
-          </NavLink>
-        ))}
-      </nav>
-
-      <nav className="sidebar-nav sidebar-nav-secondary" aria-label={t('nav.secondary')}>
-        {secondaryNav.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
@@ -137,7 +107,6 @@ export default function Sidebar() {
         aria-orientation="vertical"
         tabIndex={0}
         onPointerDown={onResizePointerDown}
-        onKeyDown={onResizeKeyDown}
       />
     </aside>
   );

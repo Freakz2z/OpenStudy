@@ -4,6 +4,8 @@ import {
   AlertCircle,
   Brain,
   Check,
+  ChevronDown,
+  ChevronUp,
   Eye,
   EyeOff,
   FlaskConical,
@@ -51,6 +53,7 @@ export default function Settings() {
   const [testResult, setTestResult] = useState<ModelTestResult | null>(null);
   const [shortcuts, setShortcuts] = useState<ShortcutSettings>(DEFAULT_SHORTCUTS);
   const [savedShortcuts, setSavedShortcuts] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [recordingAction, setRecordingAction] = useState<ShortcutActionKey | null>(null);
   const lastPersistedShortcuts = useRef(JSON.stringify(normalizeShortcutSettings(DEFAULT_SHORTCUTS)));
   const persistedLlm = useRef<AppSettings['llm']>({
@@ -310,75 +313,88 @@ export default function Settings() {
           </div>
         </div>
 
-        <div className="card panel-card settings-shortcuts-card">
+        <div className={`card panel-card settings-shortcuts-card${shortcutsOpen ? '' : ' settings-shortcuts-collapsed'}`}>
           <div className="panel-card-header">
-            <div className="panel-title-row">
-              <div className="panel-icon-wrap">
-                <Keyboard size={18} />
-              </div>
-              <div className="panel-card-copy">
-                <h2>{t('settings.shortcuts.title')}</h2>
-                <p>{t('settings.shortcuts.subtitle')}</p>
-              </div>
-            </div>
-            <div className="panel-toolbar">
-              <button
-                className="ghost"
-                type="button"
-                onClick={() => {
-                  setShortcuts(DEFAULT_SHORTCUTS);
-                  setRecordingAction(null);
-                }}
-                disabled={savingShortcuts}
-              >
-                {t('settings.shortcuts.reset')}
-              </button>
-              {savingShortcuts && (
-                <span className="panel-status" role="status">
-                  <Loader2 size={14} className="spin" />
-                  {t('common.saving')}
-                </span>
-              )}
-              {savedShortcuts && (
-                <span className="panel-status" role="status">
-                  <Check size={14} />
-                  {t('settings.shortcuts.saved')}
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="settings-shortcut-list">
-            {shortcutItems.map((item) => {
-              const isRecording = recordingAction === item.key;
-              return (
-                <div key={item.key} className="settings-shortcut-row">
-                  <div className="settings-shortcut-copy">
-                    <strong>{item.title}</strong>
-                    <span>{item.description}</span>
-                  </div>
-                  <button
-                    type="button"
-                    className={`settings-shortcut-value${isRecording ? ' is-recording' : ''}`}
-                    onClick={() =>
-                      setRecordingAction((current) => (current === item.key ? null : item.key))
-                    }
-                    aria-pressed={isRecording}
-                  >
-                    {isRecording
-                      ? t('settings.shortcuts.recording')
-                      : formatShortcut(shortcuts[item.key])}
-                  </button>
+            <button
+              className="panel-card-header-toggle"
+              onClick={() => setShortcutsOpen((v) => !v)}
+              aria-expanded={shortcutsOpen}
+            >
+              <div className="panel-title-row">
+                <div className="panel-icon-wrap">
+                  <Keyboard size={18} />
                 </div>
-              );
-            })}
+                <div className="panel-card-copy">
+                  <h2>{t('settings.shortcuts.title')}</h2>
+                  <p>{t('settings.shortcuts.subtitle')}</p>
+                </div>
+              </div>
+              {shortcutsOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+            </button>
+            {shortcutsOpen && (
+              <div className="panel-toolbar">
+                <button
+                  className="ghost"
+                  type="button"
+                  onClick={() => {
+                    setShortcuts(DEFAULT_SHORTCUTS);
+                    setRecordingAction(null);
+                  }}
+                  disabled={savingShortcuts}
+                >
+                  {t('settings.shortcuts.reset')}
+                </button>
+                {savingShortcuts && (
+                  <span className="panel-status" role="status">
+                    <Loader2 size={14} className="spin" />
+                    {t('common.saving')}
+                  </span>
+                )}
+                {savedShortcuts && (
+                  <span className="panel-status" role="status">
+                    <Check size={14} />
+                    {t('settings.shortcuts.saved')}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
-          <div className="panel-note">
-            {t('settings.shortcuts.hint', {
-              cancel: 'Esc',
-            })}
-          </div>
+          {shortcutsOpen && (
+            <>
+              <div className="settings-shortcut-list">
+                {shortcutItems.map((item) => {
+                  const isRecording = recordingAction === item.key;
+                  return (
+                    <div key={item.key} className="settings-shortcut-row">
+                      <div className="settings-shortcut-copy">
+                        <strong>{item.title}</strong>
+                        <span>{item.description}</span>
+                      </div>
+                      <button
+                        type="button"
+                        className={`settings-shortcut-value${isRecording ? ' is-recording' : ''}`}
+                        onClick={() =>
+                          setRecordingAction((current) => (current === item.key ? null : item.key))
+                        }
+                        aria-pressed={isRecording}
+                      >
+                        {isRecording
+                          ? t('settings.shortcuts.recording')
+                          : formatShortcut(shortcuts[item.key])}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="panel-note">
+                {t('settings.shortcuts.hint', {
+                  cancel: 'Esc',
+                })}
+              </div>
+            </>
+          )}
         </div>
 
         <div className="card panel-card settings-model-card">

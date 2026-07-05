@@ -1,6 +1,6 @@
 {
   "name": "openstudy",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Markdown-first AI study workspace and CLI that turns notes and imported documents into structured questions, deliberate practice, Ask AI, review, and insights",
   "license": "MIT",
   "author": {
@@ -44,8 +44,13 @@
     "test:e2e": "playwright test",
     "test:integration": "electron-vite build && PW_TEST_MODE=electron playwright test tests/integration",
     "test": "npm run test:unit && npm run test:e2e",
-    "postinstall": "electron-rebuild -f -w better-sqlite3"
+    "postinstall": "electron-rebuild -f -w better-sqlite3 || true",
+    "prepublishOnly": "npm run build:cli"
   },
+  "files": [
+    "bin",
+    "out/cli"
+  ],
   "dependencies": {
     "better-sqlite3": "^11.3.0",
     "electron-store": "^10.0.0",

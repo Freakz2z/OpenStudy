@@ -1,21 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowUpRight, BookOpen, Download, Globe, RefreshCw, Sparkles, Terminal } from 'lucide-react';
-import type { AppMeta, AppVersionInfo } from '@shared/types';
+import { ExternalLink, RefreshCw, Sparkles, Terminal, ArrowUpRight, FileText, Zap } from 'lucide-react';
+import type { AppVersionInfo } from '@shared/types';
 import { BrandLogo } from '../components/BrandLogo';
 import { PageHeader } from '../components/PageHeader';
+import { useNavigate } from 'react-router-dom';
 
 const FALLBACK_REPOSITORY_URL = 'https://github.com/Freakz2z/OpenStudy';
 const FALLBACK_RELEASES_URL = `${FALLBACK_REPOSITORY_URL}/releases`;
 const FALLBACK_RELEASE_API = 'https://api.github.com/repos/Freakz2z/OpenStudy/releases/latest';
 const FALLBACK_APP_VERSION = import.meta.env.VITE_APP_VERSION || '0.2.1';
 
-type AboutCompatApi = Partial<
-  Pick<typeof window.api, 'getAppMeta' | 'checkLatestRelease' | 'installSkill' | 'openCliPage'>
->;
-
-function getAboutApi(): AboutCompatApi {
-  return ((window as unknown as { api?: AboutCompatApi }).api ?? {}) as AboutCompatApi;
+function getAboutApi() {
+  return ((window as unknown as { api?: typeof window.api }).api ?? {}) as typeof window.api;
 }
 
 function normalizeVersion(version: string): string[] {
@@ -41,34 +38,16 @@ function compareVersions(a: string, b: string): number {
   return 0;
 }
 
-function buildFallbackMeta(name: string): AppMeta {
-  return {
-    name,
-    version: FALLBACK_APP_VERSION,
-    repositoryUrl: FALLBACK_REPOSITORY_URL,
-    releasesUrl: FALLBACK_RELEASES_URL,
-  };
-}
-
 async function fetchLatestReleaseFromBrowser(currentVersion: string): Promise<AppVersionInfo> {
   const checkedAt = Date.now();
   const fallbackReleaseUrl = `${FALLBACK_RELEASES_URL}/latest`;
 
   try {
     const response = await fetch(FALLBACK_RELEASE_API, {
-      headers: {
-        Accept: 'application/vnd.github+json',
-      },
+      headers: { Accept: 'application/vnd.github+json' },
     });
-
-    if (!response.ok) {
-      throw new Error(`GitHub API responded with ${response.status}`);
-    }
-
-    const payload = (await response.json()) as {
-      tag_name?: string;
-      html_url?: string;
-    };
+    if (!response.ok) throw new Error(`GitHub API responded with ${response.status}`);
+    const payload = (await response.json()) as { tag_name?: string; html_url?: string };
     const latestVersion = payload.tag_name?.replace(/^v/i, '') ?? null;
     return {
       currentVersion,
@@ -90,13 +69,25 @@ async function fetchLatestReleaseFromBrowser(currentVersion: string): Promise<Ap
   }
 }
 
+function GitHubIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12 24 5.37 18.63 0 12 0z" />
+    </svg>
+  );
+}
+
 export default function About() {
   const { t } = useTranslation();
-  const [meta, setMeta] = useState<AppMeta | null>(() => buildFallbackMeta('OpenStudy'));
+  const navigate = useNavigate();
+  const [version, setVersion] = useState(FALLBACK_APP_VERSION);
+  const [repoUrl, setRepoUrl] = useState(FALLBACK_REPOSITORY_URL);
+  const [releasesUrl, setReleasesUrl] = useState(FALLBACK_RELEASES_URL);
   const [versionInfo, setVersionInfo] = useState<AppVersionInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [installingSkill, setInstallingSkill] = useState(false);
   const [skillInstalled, setSkillInstalled] = useState(false);
+  const [cliInstalled, setCliInstalled] = useState(false);
 
   async function handleInstallSkill() {
     setInstallingSkill(true);
@@ -105,6 +96,7 @@ export default function About() {
       const result = await (api.installSkill?.() ?? Promise.reject(new Error('not available')));
       if (result.ok) {
         setSkillInstalled(true);
+        window.localStorage.setItem('openstudy:skill-installed', 'true');
       }
     } catch (e) {
       console.error('Failed to install skill:', e);
@@ -113,39 +105,59 @@ export default function About() {
     }
   }
 
-  function handleOpenCliPage() {
-    const api = getAboutApi();
-    api.openCliPage?.()?.catch(() => {
-      window.open('https://github.com/Freakz2z/OpenStudy/releases', '_blank');
-    });
-  }
+  const [installingCli, setInstallingCli] = useState(false);
 
-  function handleOpenRelease(url: string) {
-    window.open(url, '_blank');
+  async function handleInstallCli() {
+    setInstallingCli(true);
+    try {
+      const api = getAboutApi();
+      const result = await (api.installCli?.() ?? Promise.reject(new Error('not available')));
+      if (result.ok) {
+        setCliInstalled(true);
+        window.localStorage.setItem('openstudy:cli-installed', 'true');
+      }
+    } catch (e) {
+      console.error('Failed to install CLI:', e);
+    } finally {
+      setInstallingCli(false);
+    }
   }
 
   async function load(force = false) {
     setLoading(true);
     try {
       const api = getAboutApi();
-      const fallbackMeta = buildFallbackMeta(t('app.name'));
-      const appMeta = await (api.getAppMeta?.().catch(() => null) ?? Promise.resolve(null));
-      const resolvedMeta = appMeta ?? fallbackMeta;
-      setMeta(resolvedMeta);
+
+      const appMeta = await api.getAppMeta?.().catch(() => null);
+      const currentVersion = appMeta?.version ?? FALLBACK_APP_VERSION;
+      setVersion(currentVersion);
+      setRepoUrl(appMeta?.repositoryUrl ?? FALLBACK_REPOSITORY_URL);
+      setReleasesUrl(appMeta?.releasesUrl ?? FALLBACK_RELEASES_URL);
 
       const latest = await (api.checkLatestRelease?.(force).catch(() => null) ??
-        fetchLatestReleaseFromBrowser(resolvedMeta.version));
+        fetchLatestReleaseFromBrowser(currentVersion));
+      setVersionInfo(latest ?? {
+        currentVersion,
+        latestVersion: null,
+        upToDate: null,
+        checkedAt: Date.now(),
+        releaseUrl: `${appMeta?.releasesUrl ?? FALLBACK_RELEASES_URL}/latest`,
+        error: 'Version service unavailable',
+      });
 
-      setVersionInfo(
-        latest ?? {
-          currentVersion: resolvedMeta.version,
-          latestVersion: null,
-          upToDate: null,
-          checkedAt: Date.now(),
-          releaseUrl: `${resolvedMeta.releasesUrl}/latest`,
-          error: 'Version service unavailable',
-        },
-      );
+      const skillCheck = await api.checkSkillInstalled?.().catch(() => false);
+      if (skillCheck) {
+        setSkillInstalled(true);
+      } else if (window.localStorage.getItem('openstudy:skill-installed') === 'true') {
+        setSkillInstalled(true);
+      }
+
+      const cliCheck = await api.checkCliInstalled?.().catch(() => false);
+      if (cliCheck) {
+        setCliInstalled(true);
+      } else if (window.localStorage.getItem('openstudy:cli-installed') === 'true') {
+        setCliInstalled(true);
+      }
     } finally {
       setLoading(false);
     }
@@ -155,9 +167,7 @@ export default function About() {
     void load(false);
   }, [t]);
 
-  const checkedAtText = versionInfo
-    ? new Date(versionInfo.checkedAt).toLocaleString()
-    : null;
+  const outdated = versionInfo?.upToDate === false && versionInfo.latestVersion;
 
   return (
     <div className="page">
@@ -178,127 +188,133 @@ export default function About() {
       <div className="card about-brand">
         <BrandLogo alt="OpenStudy" className="about-brand-logo" />
         <div className="flex-1" style={{ minWidth: 0 }}>
-          <h2>{meta?.name ?? t('app.name')}</h2>
-          <div className="muted mt-xs">
-            {t('app.tagline')}
-          </div>
+          <h2>OpenStudy</h2>
           <div className="about-meta-row">
-            <span className="badge">v{meta?.version ?? '—'}</span>
+            {outdated ? (
+              <button
+                className="primary"
+                onClick={() => window.open(versionInfo!.releaseUrl, '_blank')}
+              >
+                <ArrowUpRight size={14} />
+                <span>{t('about.version.updateTo', { version: versionInfo!.latestVersion })}</span>
+              </button>
+            ) : (
+              <span className="badge">v{version}</span>
+            )}
             <a
-              href={meta?.repositoryUrl ?? FALLBACK_REPOSITORY_URL}
+              href={repoUrl}
               target="_blank"
               rel="noreferrer"
-              className="about-link"
+              className="about-link-btn"
             >
-              <Globe size={14} />
+              <GitHubIcon size={14} />
               <span>{t('about.github')}</span>
             </a>
+            <a
+              href={releasesUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="about-link-btn"
+            >
+              <ExternalLink size={14} />
+              <span>{t('about.changelog')}</span>
+            </a>
           </div>
+          {versionInfo?.error && (
+            <div className="tiny muted mt-xs">
+              {t('about.version.checkFailed', { error: versionInfo.error })}
+            </div>
+          )}
+          {outdated && (
+            <div className="tiny muted mt-xs">
+              {t('about.version.current')}: v{version} → {t('about.version.latest')}: v{versionInfo!.latestVersion}
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="card about-version-card">
-        <div className="row gap-sm mb-sm">
-          <Sparkles size={18} />
-          <h2>{t('about.version.title')}</h2>
-        </div>
-        <div className="about-version-grid">
-          <div>
-            <div className="tiny muted">{t('about.version.current')}</div>
-            <strong>v{versionInfo?.currentVersion ?? meta?.version ?? '—'}</strong>
-          </div>
-          <div>
-            <div className="tiny muted">{t('about.version.latest')}</div>
-            <strong>{versionInfo?.latestVersion ? `v${versionInfo.latestVersion}` : '—'}</strong>
-          </div>
-          <div>
-            <div className="tiny muted">{t('about.version.status')}</div>
-            <strong>
-              {versionInfo?.upToDate === true
-                ? t('about.version.upToDate')
-                : versionInfo?.upToDate === false
-                  ? t('about.version.outdated')
-                  : t('about.version.unknown')}
-            </strong>
-          </div>
-        </div>
-        {checkedAtText && (
-          <div className="tiny muted mt-md">
-            {t('about.version.checkedAt', { time: checkedAtText })}
-          </div>
-        )}
-        {versionInfo?.error && (
-          <div className="tiny muted mt-sm">
-            {t('about.version.checkFailed', { error: versionInfo.error })}
-          </div>
-        )}
-        {versionInfo?.upToDate === false && (
-          <div className="about-version-actions">
+      <div className="card">
+        <div className="about-install-grid">
+          <div className="about-install-item">
+            <div className="row gap-sm mb-sm">
+              <Sparkles size={18} />
+              <h3>{t('about.install.skillTitle')}</h3>
+            </div>
+            <p className="muted mb-md" style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7 }}>
+              {t('about.install.skillDesc')}
+            </p>
             <button
-              className="primary lg"
-              onClick={() => handleOpenRelease(versionInfo.releaseUrl)}
+              className="primary"
+              onClick={() => void handleInstallSkill()}
+              disabled={installingSkill || skillInstalled}
             >
-              <ArrowUpRight size={16} />
-              <span>{t('about.version.goLatest')}</span>
+              <Sparkles size={14} />
+              <span>
+                {skillInstalled
+                  ? t('about.install.skillDone')
+                  : installingSkill
+                    ? t('about.install.skillInstalling')
+                    : t('about.install.skillBtn')}
+              </span>
             </button>
           </div>
-        )}
-      </div>
 
-      <div className="card">
-        <div className="row gap-sm mb-sm">
-          <Download size={18} />
-          <h2>{t('about.install.title')}</h2>
-        </div>
-        <p className="muted mb-md">
-          {t('about.install.description')}
-        </p>
-        <div className="about-install-row">
-          <button
-            className="primary lg"
-            onClick={() => void handleInstallSkill()}
-            disabled={installingSkill || skillInstalled}
-          >
-            <Sparkles size={16} />
-            <span>
-              {skillInstalled
-                ? t('about.install.skillDone')
-                : installingSkill
-                  ? t('about.install.skillInstalling')
-                  : t('about.install.skillBtn')}
-            </span>
-          </button>
-          <button
-            className="lg"
-            onClick={() => handleOpenCliPage()}
-          >
-            <Terminal size={16} />
-            <span>{t('about.install.cliBtn')}</span>
-          </button>
+          <div className="about-install-item">
+            <div className="row gap-sm mb-sm">
+              <Terminal size={18} />
+              <h3>{t('about.install.cliTitle')}</h3>
+            </div>
+            <p className="muted mb-md" style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7 }}>
+              {t('about.install.cliDesc')}
+            </p>
+            <button
+              className="primary"
+              onClick={() => void handleInstallCli()}
+              disabled={installingCli || cliInstalled}
+            >
+              <Terminal size={14} />
+              <span>
+                {cliInstalled
+                  ? t('about.install.cliDone')
+                  : installingCli
+                    ? t('about.install.cliInstalling')
+                    : t('about.install.cliBtn')}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="card">
-        <div className="row gap-sm mb-sm">
-          <Sparkles size={18} />
-          <h2>{t('about.philosophy')}</h2>
-        </div>
-        <p className="muted">
-          {t('about.philosophyText')}
-        </p>
-      </div>
+        <div className="about-install-grid">
+          <div className="about-install-item">
+            <div className="row gap-sm mb-sm">
+              <FileText size={18} />
+              <h3>{t('templates.title')}</h3>
+            </div>
+            <p className="muted mb-md" style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7 }}>
+              {t('templates.subtitle')}
+            </p>
+            <button onClick={() => navigate('/templates')}>
+              <FileText size={14} />
+              <span>{t('templates.title')}</span>
+            </button>
+          </div>
 
-      <div className="card">
-        <div className="row gap-sm mb-sm">
-          <BookOpen size={18} />
-          <h2>{t('about.features')}</h2>
+          <div className="about-install-item">
+            <div className="row gap-sm mb-sm">
+              <Zap size={18} />
+              <h3>{t('skills.title')}</h3>
+            </div>
+            <p className="muted mb-md" style={{ fontSize: 'var(--text-sm)', lineHeight: 1.7 }}>
+              {t('skills.subtitle')}
+            </p>
+            <button onClick={() => navigate('/skills')}>
+              <Zap size={14} />
+              <span>{t('skills.title')}</span>
+            </button>
+          </div>
         </div>
-        <ul className="muted about-features-list">
-          <li>{t('about.feat1')}</li>
-          <li>{t('about.feat2')}</li>
-          <li>{t('about.feat3')}</li>
-          <li>{t('about.feat4')}</li>
-        </ul>
       </div>
     </div>
   );

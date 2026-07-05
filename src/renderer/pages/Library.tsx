@@ -383,15 +383,6 @@ export default function Library() {
               </button>
               <button
                 disabled={isDeleting}
-                onClick={() => navigate(`/markdown/${d.id}`)}
-                title={t('library.actions.edit')}
-                aria-label={t('library.actions.edit')}
-                className="icon-only"
-              >
-                <FileText size={16} />
-              </button>
-              <button
-                disabled={isDeleting}
                 onClick={() => navigate(`/records/${d.id}`)}
                 title={t('library.actions.viewRecords')}
                 aria-label={t('library.actions.viewRecords')}
@@ -418,6 +409,15 @@ export default function Library() {
                 <MessageSquare size={16} />
               </button>
               <div className="flex-1" />
+              <button
+                disabled={isDeleting}
+                onClick={() => navigate(`/markdown/${d.id}`)}
+                title={t('library.actions.edit')}
+                aria-label={t('library.actions.edit')}
+                className="icon-only"
+              >
+                <FileText size={16} />
+              </button>
               <button
                 disabled={isDeleting}
                 onClick={() => onResetProgress(d.id)}

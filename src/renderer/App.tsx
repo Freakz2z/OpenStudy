@@ -13,8 +13,9 @@ import Settings from './pages/Settings';
 import About from './pages/About';
 import Records from './pages/Records';
 import CreateDocument from './pages/CreateDocument';
-import Templates from './pages/Templates';
 import MarkdownEditor from './pages/MarkdownEditor';
+import Templates from './pages/Templates';
+import Skills from './pages/Skills';
 
 function RouteEffects() {
   const { pathname } = useLocation();
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/about" element={<About />} />
           <Route path="/templates" element={<Templates />} />
+          <Route path="/skills" element={<Skills />} />
           <Route path="*" element={<Navigate to="/overview" replace />} />
         </Routes>
       </main>

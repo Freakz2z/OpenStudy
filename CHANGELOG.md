@@ -2,7 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
-The format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), but stays lightweight for a fast-moving desktop project.
+## [0.3.3] - 2026-07-05
+
+### Added
+
+- **Skills page** — new `/skills` route displaying all 11 OpenStudy Claude Code slash commands with icons, titles, command badges, and descriptions
+- **CLI as standalone npm package** — `bin/openstudy.mjs` now imports the bundled CLI directly as plain Node.js instead of spawning Electron; `files` and `prepublishOnly` fields set up for `npm publish`
+- **CLI one-click install** — `app:installCli` IPC handler runs `npm install -g openstudy` directly; About page button shows install → installing → installed states matching the Skill install pattern
+- **Install detection** — `app:checkSkillInstalled` and `app:checkCliInstalled` IPC handlers with localStorage fallback so both install cards persist their state across sessions
+
+### Changed
+
+- **About page redesigned** — replaced philosophy/features sections with two main containers: brand card (logo, version, GitHub, changelog) and install tools grid (Skill, CLI, Templates, Skills links)
+- **Version badge in About** — when outdated, the version badge becomes an "Update to vX.Y.Z" button; removed "last checked" timestamp
+- **Settings shortcuts collapsed by default** — toggle with chevron icon, full keyboard shortcut audit included
+- **Sidebar streamlined** — Templates and Skills entries moved into About page as navigation buttons; removed sidebar resize keyboard shortcuts
+- **QuestionCard** — removed hardcoded A/B/C/D option letter selection keys
+- **CSS design tokens** — unified `.about-link-btn`, `.about-install-grid`, `.about-install-item`, `.panel-card-header-toggle` patterns
+
+### Fixed
+
+- About page install grid button alignment — buttons now anchor to the bottom of each card regardless of description length
+- CLI stats table output no longer crashes on null accuracy values
+- Asset cleanup in public directory
 
 ## [0.3.0] - 2026-07-04
 

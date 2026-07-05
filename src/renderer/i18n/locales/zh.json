@@ -7,13 +7,7 @@
     "title": "关于",
     "refresh": "刷新版本状态",
     "github": "GitHub 仓库",
-    "philosophy": "产品理念",
-    "philosophyText": "不生产知识，只把已有内容整理成稳定、可编辑、可练习的 Markdown 题库。围绕结构化题目、练习反馈和错题回顾，把学习闭环真正跑起来。",
-    "features": "核心功能",
-    "feat1": "Markdown-first 题库导入、编辑与结构化管理",
-    "feat2": "AI 辅助把原始内容整理成标准化题目",
-    "feat3": "统一的做题、问 AI、进度追踪与目录导航体验",
-    "feat4": "自动错题本与数据概览，支持回看、重做与持续复盘",
+    "changelog": "更新日志",
     "version": {
       "title": "版本状态",
       "current": "当前版本",
@@ -23,16 +17,22 @@
       "outdated": "发现新版本",
       "unknown": "暂时无法判断",
       "goLatest": "前往最新 Release",
+      "updateTo": "更新到 v{{version}}",
       "checkedAt": "最近检查：{{time}}",
       "checkFailed": "版本检查未完成：{{error}}"
     },
     "install": {
       "title": "安装扩展",
-      "description": "安装 CLI 命令行工具和 Claude Code Skill，在终端和 AI 中直接使用 OpenStudy。",
+      "skillTitle": "Claude Code Skill",
+      "skillDesc": "安装后在 Claude Code 中直接使用 /openstudy 系列命令，让 AI 帮你导入文档、识别题目、批改答案、分析学习数据。",
       "skillBtn": "安装 Skill",
       "skillInstalling": "安装中...",
       "skillDone": "Skill 已安装",
-      "cliBtn": "获取 CLI"
+      "cliTitle": "命令行工具",
+      "cliDesc": "通过 npm 全局安装后在终端中使用 OpenStudy 命令，批量处理题库、导入导出、校验统计等操作，适合脚本化和 CI/CD 集成。",
+      "cliBtn": "安装 CLI",
+      "cliInstalling": "安装中...",
+      "cliDone": "CLI 已安装"
     }
   },
   "nav": {
@@ -48,7 +48,8 @@
     "resizeSidebar": "调整侧边栏宽度",
     "settings": "设置",
     "about": "关于",
-    "templates": "标准"
+    "templates": "标准",
+    "skills": "技能"
   },
   "overview": {
     "title": "数据概览",
@@ -681,5 +682,64 @@
     "standardTitle": "Markdown 标准说明",
     "copyAll": "复制所有模板",
     "copiedAll": "所有模板已复制到剪贴板"
+  },
+  "skills": {
+    "title": "技能",
+    "subtitle": "OpenStudy 提供的 Claude Code 斜杠命令，在终端和 AI 中直接使用。",
+    "openstudy": {
+      "title": "OpenStudy 主技能",
+      "desc": "OpenStudy AI 学习工作台 — 将学习资料结构化为题目，支持练习和考试。",
+      "command": "/openstudy"
+    },
+    "ingest": {
+      "title": "导入文档并识别题目",
+      "desc": "导入文档并识别题目。支持 PDF/Word/PPT/Markdown 等格式。",
+      "command": "/openstudy:ingest"
+    },
+    "identify": {
+      "title": "识别题目",
+      "desc": "对已导入的文档运行 AI 题目识别。",
+      "command": "/openstudy:identify"
+    },
+    "validate": {
+      "title": "校验题目格式",
+      "desc": "校验 Markdown 或 JSON 文件是否符合 OpenStudy 标准格式。",
+      "command": "/openstudy:validate"
+    },
+    "exam": {
+      "title": "导入题目集",
+      "desc": "将 Standard Markdown 或 JSON 格式的题目集导入到指定文档。",
+      "command": "/openstudy:exam"
+    },
+    "export": {
+      "title": "导出题目",
+      "desc": "将文档的题目导出为 Standard Markdown 或 JSON 格式。",
+      "command": "/openstudy:export"
+    },
+    "grade": {
+      "title": "AI 批改答案",
+      "desc": "用 AI 批改简答题/填空题答案。",
+      "command": "/openstudy:grade"
+    },
+    "insights": {
+      "title": "学习洞察",
+      "desc": "基于最近错题生成学习建议和分析报告。",
+      "command": "/openstudy:insights"
+    },
+    "stats": {
+      "title": "学习统计",
+      "desc": "查看整体或单个文档的学习统计。",
+      "command": "/openstudy:stats"
+    },
+    "settings": {
+      "title": "LLM 配置",
+      "desc": "查看或修改 OpenStudy LLM 配置。",
+      "command": "/openstudy:settings"
+    },
+    "doctor": {
+      "title": "环境诊断",
+      "desc": "检查 OpenStudy CLI 环境状态，诊断各项依赖。",
+      "command": "/openstudy:doctor"
+    }
   }
 }

@@ -1,0 +1,12 @@
+out/main
+out/preload
+out/renderer
+out/tsconfig.cli.tsbuildinfo
+src
+resources
+public
+scripts
+tests
+release
+node_modules
+.electron-builder.yml

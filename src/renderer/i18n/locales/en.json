@@ -7,13 +7,7 @@
     "title": "About",
     "refresh": "Refresh version status",
     "github": "GitHub repository",
-    "philosophy": "Philosophy",
-    "philosophyText": "We don't produce knowledge — we turn existing material into a stable, editable, practice-ready Markdown question bank. The focus is structured questions, clear feedback, and a study loop you can actually keep using.",
-    "features": "Core Features",
-    "feat1": "Markdown-first import, editing, and structured question management",
-    "feat2": "AI-assisted cleanup from raw source content into standardized questions",
-    "feat3": "Unified practice, Ask AI, progress tracking, and directory navigation",
-    "feat4": "Automatic wrong book and overview data for review, redo, and reflection",
+    "changelog": "Changelog",
     "version": {
       "title": "Version status",
       "current": "Current version",
@@ -23,16 +17,22 @@
       "outdated": "Update available",
       "unknown": "Unable to determine",
       "goLatest": "Open latest release",
+      "updateTo": "Update to v{{version}}",
       "checkedAt": "Last checked: {{time}}",
       "checkFailed": "Version check failed: {{error}}"
     },
     "install": {
       "title": "Install Extras",
-      "description": "Install the CLI tool and Claude Code Skill to use OpenStudy from the terminal and AI.",
+      "skillTitle": "Claude Code Skill",
+      "skillDesc": "Install the skill to use /openstudy commands directly in Claude Code. Let AI help you import documents, identify questions, grade answers, and analyze study data.",
       "skillBtn": "Install Skill",
       "skillInstalling": "Installing...",
       "skillDone": "Skill Installed",
-      "cliBtn": "Get CLI"
+      "cliTitle": "CLI Tool",
+      "cliDesc": "Install globally via npm to use the OpenStudy CLI in your terminal. Batch import, export, validate, and stats — ideal for scripting and CI/CD integration.",
+      "cliBtn": "Install CLI",
+      "cliInstalling": "Installing...",
+      "cliDone": "CLI Installed"
     }
   },
   "nav": {
@@ -48,7 +48,8 @@
     "resizeSidebar": "Resize sidebar",
     "settings": "Settings",
     "about": "About",
-    "templates": "Templates"
+    "templates": "Templates",
+    "skills": "Skills"
   },
   "overview": {
     "title": "Overview",
@@ -681,5 +682,64 @@
     "standardTitle": "Markdown Standard Guide",
     "copyAll": "Copy All Templates",
     "copiedAll": "All templates copied to clipboard"
+  },
+  "skills": {
+    "title": "Skills",
+    "subtitle": "Claude Code slash commands provided by OpenStudy, for use in terminal and AI.",
+    "openstudy": {
+      "title": "OpenStudy Main Skill",
+      "desc": "OpenStudy AI Learning Workbench — structure study materials into questions for practice and exams.",
+      "command": "/openstudy"
+    },
+    "ingest": {
+      "title": "Ingest & Identify",
+      "desc": "Import a document and identify questions. Supports PDF, Word, PPT, Markdown and more.",
+      "command": "/openstudy:ingest"
+    },
+    "identify": {
+      "title": "Identify Questions",
+      "desc": "Run AI question identification on an already-imported document.",
+      "command": "/openstudy:identify"
+    },
+    "validate": {
+      "title": "Validate Format",
+      "desc": "Check whether a Markdown or JSON file conforms to the OpenStudy standard format.",
+      "command": "/openstudy:validate"
+    },
+    "exam": {
+      "title": "Import Question Set",
+      "desc": "Import a question set in Standard Markdown or JSON format into a target document.",
+      "command": "/openstudy:exam"
+    },
+    "export": {
+      "title": "Export Questions",
+      "desc": "Export a document's questions to Standard Markdown or JSON format.",
+      "command": "/openstudy:export"
+    },
+    "grade": {
+      "title": "AI Grading",
+      "desc": "Use AI to grade short-answer and fill-in-the-blank responses.",
+      "command": "/openstudy:grade"
+    },
+    "insights": {
+      "title": "Learning Insights",
+      "desc": "Generate study suggestions and analysis reports based on recent wrong answers.",
+      "command": "/openstudy:insights"
+    },
+    "stats": {
+      "title": "Learning Stats",
+      "desc": "View overall or per-document study statistics.",
+      "command": "/openstudy:stats"
+    },
+    "settings": {
+      "title": "LLM Settings",
+      "desc": "View or modify the OpenStudy LLM configuration.",
+      "command": "/openstudy:settings"
+    },
+    "doctor": {
+      "title": "Environment Doctor",
+      "desc": "Check the OpenStudy CLI environment and diagnose dependencies.",
+      "command": "/openstudy:doctor"
+    }
   }
 }

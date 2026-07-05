@@ -376,23 +376,6 @@ export default function QuestionCard({
           selectOptionByIndex(nextIndex, s.question.options);
           return;
         }
-
-        const k = e.key.toUpperCase();
-        const idx = k.charCodeAt(0) - 65;
-        if (idx >= 0 && idx < s.question.options.length) {
-          setOptionCursorState(idx);
-          if (s.question.type === 'multiple') {
-            const letter = String.fromCharCode(65 + idx);
-            setChoiceState((current) => {
-              const selected = new Set(normalizeChoiceAnswer(current, s.question.options));
-              if (selected.has(letter)) selected.delete(letter);
-              else selected.add(letter);
-              return [...selected].sort().join('');
-            });
-          } else {
-            setChoiceState(s.question.options[idx]);
-          }
-        }
       }
     }
 

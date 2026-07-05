@@ -109,6 +109,12 @@ const api = {
     ipcRenderer.invoke('llm:studyInsights', payload),
   installSkill: (): Promise<{ ok: boolean; path: string }> =>
     ipcRenderer.invoke('app:installSkill'),
+  checkSkillInstalled: (): Promise<boolean> =>
+    ipcRenderer.invoke('app:checkSkillInstalled'),
+  checkCliInstalled: (): Promise<boolean> =>
+    ipcRenderer.invoke('app:checkCliInstalled'),
+  installCli: (): Promise<{ ok: boolean; error?: string }> =>
+    ipcRenderer.invoke('app:installCli'),
   openCliPage: (): Promise<{ ok: boolean }> =>
     ipcRenderer.invoke('app:openCliPage'),
 };

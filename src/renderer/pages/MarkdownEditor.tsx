@@ -3,7 +3,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { normalizeMarkdownStandardLanguage } from '@shared/markdown-standard';
 import {
-  Save, FileText, Edit3, Check, RefreshCw, Loader2, SearchCheck,
+  Save, Check, RefreshCw, Loader2, SearchCheck,
   ScanLine, ScrollText, XCircle, CheckCircle2, Trash2, X,
 } from 'lucide-react';
 import type { IdentifyLogEntry, IdentifyQuestionsResult, Question } from '@shared/types';
@@ -39,7 +39,6 @@ function normalizeIdentifyResult(
   return payload;
 }
 
-type View = 'edit' | 'preview';
 
 export default function MarkdownEditor() {
   const { docId } = useParams<{ docId: string }>();
@@ -48,7 +47,6 @@ export default function MarkdownEditor() {
   const toast = useToast();
   const [markdown, setMarkdown] = useState('');
   const [original, setOriginal] = useState('');
-  const [view, setView] = useState<View>('edit');
   const [source, setSource] = useState<'db' | 'fresh' | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -274,20 +272,6 @@ export default function MarkdownEditor() {
             )}
             {!showLogs && (
               <>
-                <button
-                  className={`icon-only${view === 'edit' ? ' primary' : ''}`}
-                  onClick={() => setView('edit')}
-                  title={t('markdownEditor.edit')}
-                >
-                  <Edit3 size={16} />
-                </button>
-                <button
-                  className={`icon-only${view === 'preview' ? ' primary' : ''}`}
-                  onClick={() => setView('preview')}
-                  title={t('markdownEditor.preview')}
-                >
-                  <FileText size={16} />
-                </button>
                 <button
                   className="icon-only"
                   disabled={identifying}
@@ -532,21 +516,11 @@ export default function MarkdownEditor() {
             </div>
           )}
 
-          {view === 'edit' ? (
-            <textarea
-              value={markdown}
-              onChange={(e) => setMarkdown(e.target.value)}
-              className="markdown-editor-textarea"
-            />
-          ) : (
-            <div
-              className="card markdown-editor-preview"
-            >
-              {markdown || (
-                <span className="muted">（空）</span>
-              )}
-            </div>
-          )}
+          <textarea
+            value={markdown}
+            onChange={(e) => setMarkdown(e.target.value)}
+            className="markdown-editor-textarea"
+          />
 
           <div className="muted mt-md" style={{ fontSize: 'var(--text-sm)' }}>
             {t('markdownEditor.hint')}
